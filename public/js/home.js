@@ -42,6 +42,7 @@ function loadUserData(){
             for(var i=0;i<jobDocs.length;i++){
                 var jobDoc = jobDocs[i];
                 var job = jobDoc.data();
+                console.log(job);
                 var tooltip = "";
                 var status = "inactive";
                 if(cbBalance){
@@ -50,9 +51,9 @@ function loadUserData(){
                 }
                 else{
                     status = job.active ? "warn": "inactive";
-                    tooltip = "Unable to connect to Coinbase";
+                    tooltip = status == "warn"?"Unable to connect to Coinbase":"inactive";
                 }
-                var html = "<div><span class='{status}' title='{tooltip}'>&nbsp;</span> Buy {currency}, {amount} every {recur} day(s)</div>";
+                var html = "<div class='job'><span class='{status}' title='{tooltip}'>&nbsp;</span> Buy {currency}, {amount} every {recur} day(s)</div>";
                 html = html.replaceAll("{status}", status);
                 html = html.replaceAll("{tooltip}", tooltip);
                 html = html.replace("{currency}", job.asset);
@@ -90,5 +91,24 @@ function removeApiKey(){
 }
 
 function addRecur(){
-    $("#addPurchaseModal").modal("hide");
+    var job = {};
+    job.asset = document.getElementById("selectAsset").value;
+    job.amount = parseFloat(document.getElementById("txtAmount").value);
+    job.recurDays = parseInt(document.getElementById("txtRecur").value);
+    job.active = document.getElementById("selectActive").value=="active"?true:false;
+    job.created = new Date();
+    console.log(job);
+    if(job.amount < 1){
+        alert("The amount must be at least 1");
+        return;
+    }
+    if(job.recurDays < 1){
+        alert("The number of days must be at least 1");
+        return;
+    }
+    UserManager.createJob(firebaseUser.uid, job).then(function(response){
+        console.log(response);
+        $("#addPurchaseModal").modal("hide");
+        loadUserData();
+    });
 }

@@ -42,6 +42,13 @@
         border-radius:5px;
         font-family: 'Courier New', Courier, monospace;
       }
+      .job {
+        background-color: lightgray;
+        padding:5px;
+        margin:5px;
+        cursor:pointer;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+      }
     </style>
   </head>
   <body>
@@ -94,22 +101,22 @@
                 <div class="mb-3">
                 <label for="exampleFormControlInput1" class="form-label">Asset</label>
                 <select id="selectAsset" class="form-control">
-                    <option>BTC/USD</option>
-                    <option>ETH/USD</option>
+                    <option value="BTCUSD">BTC/USD</option>
+                    <option value="ETHUSD">ETH/USD</option>
                 </select>
                 </div>
                 <div class="mb-3">
                 <label for="exampleFormControlInput1" class="form-label">Amount $</label>
-                <input id="txt" type="text" class="form-control" placeholder="0.00" value="10.00"/>
+                <input id="txtAmount" type="number" class="form-control" placeholder="0.00" value="10.00"/>
                 </div>
                 <div class="mb-3">
-                <label for="exampleFormControlInput1" class="form-label">Recurring every <input id="txt" type="text" class="form-control" value="7" placeholder="0" style="width:60px;display:inline"/> day(s)</label>
+                <label for="exampleFormControlInput1" class="form-label">Recurring every <input id="txtRecur" type="number" class="form-control" value="7" placeholder="0" style="width:70px;display:inline"/> day(s)</label>
                 </div>
                 <div class="mb-3">
                 <label for="exampleFormControlInput1" class="form-label">Status</label>
                 <select id="selectActive" class="form-control">
-                    <option>Active</option>
-                    <option>Inactive</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
                 </select>
                 </div>
             </div>

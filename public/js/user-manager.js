@@ -30,4 +30,19 @@ var UserManager = {
             return "User key removed!";
         });
     },
+
+    createJob: function(userId, job){
+        var collection = firebase.firestore().collection("users/"+userId+"/jobs");
+        return collection.add(job).then(function(doc){
+            return doc.id;
+        });
+    },
+
+    updateJob: function(userId, jobId, job){
+
+    },
+    
+    deleteJob: function(userId, jobId){
+
+    }
 }
