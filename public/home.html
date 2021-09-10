@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Welcome to Firebase Hosting</title>
+    <title>Coinbase Companion</title>
 
     <script src="/__/firebase/8.8.1/firebase-app.js"></script>
     <script src="/__/firebase/8.8.1/firebase-auth.js"></script>
@@ -36,18 +36,15 @@
         border-radius:5px;
         font-family: 'Courier New', Courier, monospace;
       }
-      .warn {
-        background-color: orange;
-        color: orange;
-        border-radius:5px;
-        font-family: 'Courier New', Courier, monospace;
-      }
       .job {
         background-color: lightgray;
         padding:5px;
         margin:5px;
         cursor:pointer;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+        box-shadow: 0 2px 1px -1px rgba(0,0,0,.2),0 1px 1px 0 rgba(0,0,0,.14),0 1px 3px 0 rgba(0,0,0,.12);
+      }
+      .bold {
+        font-weight: bold;
       }
     </style>
   </head>
@@ -99,25 +96,18 @@
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                <label for="exampleFormControlInput1" class="form-label">Asset</label>
-                <select id="selectAsset" class="form-control">
-                    <option value="BTCUSD">BTC/USD</option>
-                    <option value="ETHUSD">ETH/USD</option>
-                </select>
+                  <label for="exampleFormControlInput1" class="form-label">Asset</label>
+                  <select id="selectAsset" class="form-control">
+                      <option value="BTCUSD">BTC/USD</option>
+                      <option value="ETHUSD">ETH/USD</option>
+                  </select>
                 </div>
                 <div class="mb-3">
-                <label for="exampleFormControlInput1" class="form-label">Amount $</label>
-                <input id="txtAmount" type="number" class="form-control" placeholder="0.00" value="10.00"/>
+                  <label for="exampleFormControlInput1" class="form-label">Amount $</label>
+                  <input id="txtAmount" type="number" class="form-control" placeholder="0.00" value="10.00"/>
                 </div>
                 <div class="mb-3">
-                <label for="exampleFormControlInput1" class="form-label">Recurring every <input id="txtRecur" type="number" class="form-control" value="7" placeholder="0" style="width:70px;display:inline"/> day(s)</label>
-                </div>
-                <div class="mb-3">
-                <label for="exampleFormControlInput1" class="form-label">Status</label>
-                <select id="selectActive" class="form-control">
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                </select>
+                  <label for="exampleFormControlInput1" class="form-label">Recurring every <input id="txtRecur" type="number" class="form-control" value="7" placeholder="0" style="width:70px;display:inline"/> day(s)</label>
                 </div>
             </div>
             <div class="modal-footer">
@@ -126,6 +116,43 @@
             </div>
             </div>
         </div>
+    </div>
+
+    <div class="modal fade" id="viewPurchaseModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+          <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Recurring Purchase</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+              <input type="hidden" id="viewJobId" value=""/>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Asset</label>
+                <div id="spanViewAsset" class="bold"></div>
+              </div>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Amount $</label>
+                <div id="spanViewAmount" class="bold"></div>
+              </div>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Recurring every <span id="spanViewRecur" class="bold"></span> day(s)</label>
+              </div>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Created</label>
+                <div id="spanViewCreated" class="bold"></div>
+              </div>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Next Purchase</label>
+                <div id="spanViewNext" class="bold"></div>
+              </div>
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-danger" onclick="deleteRecur()">Delete</button>
+          </div>
+          </div>
+      </div>
     </div>
 
     <script>

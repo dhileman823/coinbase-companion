@@ -17,6 +17,13 @@ var UserManager = {
         });
     },
 
+    getUserJob: function(userId, jobId){
+        var collection = firebase.firestore().collection("users/"+userId+"/jobs");
+        return collection.doc(jobId).get().then(function(docRef){
+            return docRef;
+        });
+    },
+
     addUserKey: function(userId, key){
         var collection = firebase.firestore().collection("users");
         return collection.doc(userId).update({"key":key}).then(function(){
@@ -37,12 +44,11 @@ var UserManager = {
             return doc.id;
         });
     },
-
-    updateJob: function(userId, jobId, job){
-
-    },
     
     deleteJob: function(userId, jobId){
-
+        collection = firebase.firestore().collection("users/"+userId+"/jobs");
+        return collection.doc(jobId).delete().then(function(){
+            return "document deleted";
+        });
     }
 }
