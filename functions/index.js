@@ -1,3 +1,4 @@
+var request = require('request');
 const functions = require("firebase-functions");
 var admin = require('firebase-admin');
 admin.initializeApp();
@@ -6,12 +7,18 @@ var db = admin.firestore();
 exports.getBalance = functions.https.onCall((data, context) => {
     const uid = context.auth.uid;
     let userCollection = db.collection("users");
-    userCollection.doc(uid).then(userDoc => {
+    return userCollection.doc(uid).get().then(userDoc => {
         var user = userDoc.data();
+        functions.logger.log("getBalance => got user", user);
         if(userHasValidKey(user)){
+            functions.logger.log("getBalance => user has valid key");
             coinbaseBalanceRequest(user).then(function(resp){
-
+                functions.logger.log("getBalance => conbaseBalanceRequest.then");
+                return resp;
             });
+        }
+        else{
+            return {"message":"User does not have a valid key"};
         }
     });
 });
@@ -24,12 +31,12 @@ function userHasValidKey(user){
 }
 
 function coinbaseBalanceRequest(user){
+    functions.logger.log("getBalance => begin coinbaseBalanceRequest");
     const coinbaseApiUrl = "https://api.pro.coinbase.com";
     const accountsUrl = coinbaseApiUrl + "/accounts";
 
     var timestamp = Date.now() / 1000;
     var signature = getCoinbaseBalanceRequestSignature(user, timestamp);
-    var request = require('request');
     var requestOptions = {
         "url": accountsUrl,
         "headers": {
@@ -37,10 +44,13 @@ function coinbaseBalanceRequest(user){
             "CB-ACCESS-SIGN": signature,
             "CB-ACCESS-TIMESTAMP": timestamp,
             "CB-ACCESS-PASSPHRASE": user.passphrase,
+            "User-Agent": "Firebase-function"
         }
     };
     return new Promise(function(resolve, reject){
+        functions.logger.log("getBalance => begin request to coinbase: " + accountsUrl);
         request(requestOptions, function(error, response, body) {
+            functions.logger.log("getBalance => coinbase request finished", body);
             resolve(body);
         });
     });
