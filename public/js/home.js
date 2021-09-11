@@ -5,14 +5,15 @@ function loadUserData(){
         //configure UI elements for user
         if(user.key && user.key.length > 0){
             //found user and key
-            var peek = user.key.substring(user.key.length-3,user.key.length);
-            while(peek.length<user.key.length){
-                peek = "X"+peek;
-            }
-            document.getElementById("spanKeyPeek").innerHTML = peek;
+            document.getElementById("spanKeyPeek").innerHTML = user.key;
             document.getElementById("memberContent").style.display = "block";
             document.getElementById("btnAddKey").style.display = "none";
             document.getElementById("keySection").style.display = "block";
+
+            var req = firebase.functions().httpsCallable("getBalance");
+            req().then(function(response){
+                console.log(response);
+            });
             //get balance from coinbase
             if(cbBalance){
                 //document.getElementById("spanBalance").innerHTML = "$" + cbBalance;
@@ -70,7 +71,9 @@ function loadUserData(){
 
 function addApiKey(){
     var newKey = document.getElementById("txtKey").value;
-    UserManager.addUserKey(firebaseUser.uid, newKey).then(function(response){
+    var newSecret = document.getElementById("txtSecret").value;
+    var newPassphrase = document.getElementById("txtPassphrase").value;
+    UserManager.addUserKey(firebaseUser.uid, newKey, newSecret, newPassphrase).then(function(response){
         $("#addKeyModal").modal("hide");
         loadUserData();
     });
@@ -105,15 +108,10 @@ function loadViewModal(jobId){
 }
 
 function calculateNextDate(timestamp, recurDays){
-    console.log("created time " + timestamp.seconds);
     var currentTime = parseInt(new Date().getTime()/1000);
-    console.log("current time " + currentTime);
     var diff = currentTime - timestamp.seconds;
-    console.log("diff " + diff);
     var diffDays = parseInt(diff / 86400);
-    console.log("diffDays " + diffDays);
     var prevOccur = parseInt(diffDays / recurDays);
-    console.log("prevOccur " + prevOccur);
     var nextTimestamp = timestamp.seconds += (86400*recurDays*(prevOccur+1));
     return nextTimestamp;
 }

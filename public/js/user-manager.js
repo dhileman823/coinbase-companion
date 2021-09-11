@@ -24,16 +24,16 @@ var UserManager = {
         });
     },
 
-    addUserKey: function(userId, key){
+    addUserKey: function(userId, key, secret, passphrase){
         var collection = firebase.firestore().collection("users");
-        return collection.doc(userId).update({"key":key}).then(function(){
+        return collection.doc(userId).update({"key":key, "secret":secret, "passphrase":passphrase}).then(function(){
             return "User key added!";
         });
     },
 
     removeUserKey: function(userId){
         var collection = firebase.firestore().collection("users");
-        return collection.doc(userId).update({"key":""}).then(function(){
+        return collection.doc(userId).update({"key":"", "secret":"", "passphrase":""}).then(function(){
             return "User key removed!";
         });
     },
