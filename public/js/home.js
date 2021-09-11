@@ -7,7 +7,6 @@ function logout(){
 function loadUserData(){
     UserManager.getUser(firebaseUser.uid).then(function(userDoc){
         var user = userDoc.data();
-        var cbBalance;
         //configure UI elements for user
         if(user.key && user.key.length > 0){
             //found user and key
@@ -18,17 +17,29 @@ function loadUserData(){
 
             var req = firebase.functions().httpsCallable("getBalance");
             req().then(function(response){
+                if(response && response.data){
+                    var portfolio = JSON.parse(response.data);
+                    if(portfolio){
+                        //find usd
+                        var usd = -1;
+                        for(var i=0;i<portfolio.length;i++){
+                            var wallet = portfolio[i];
+                            if(wallet.currency == "USD"){
+                                usd = wallet.balance;
+                            }
+                        }
+                        document.getElementById("spanBalance").innerHTML = usd + " USD";
+                        document.getElementById("spanBalance").style.color = "green";
+                    }
+                    else{
+                        document.getElementById("spanBalance").innerHTML = "Unable to connect to Coinbase.";
+                        document.getElementById("spanBalance").style.color = "red";
+                    }
+                }
                 console.log(response);
+                
             });
-            //get balance from coinbase
-            if(cbBalance){
-                //document.getElementById("spanBalance").innerHTML = "$" + cbBalance;
-                //document.getElementById("spanBalance").style.color = "green";
-            }
-            else{
-                document.getElementById("spanBalance").innerHTML = "Unable to connect to Coinbase.";
-                document.getElementById("spanBalance").style.color = "red";
-            }
+            
         }
         else{
             //found user, but no key

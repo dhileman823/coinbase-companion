@@ -9,13 +9,10 @@ exports.getBalance = functions.https.onCall((data, context) => {
     let userCollection = db.collection("users");
     return userCollection.doc(uid).get().then(userDoc => {
         var user = userDoc.data();
-        functions.logger.log("getBalance => got user", user);
+        functions.logger.log("getBalance => got user");
         if(userHasValidKey(user)){
             functions.logger.log("getBalance => user has valid key");
-            coinbaseBalanceRequest(user).then(function(resp){
-                functions.logger.log("getBalance => conbaseBalanceRequest.then");
-                return resp;
-            });
+            return coinbaseBalanceRequest(user);
         }
         else{
             return {"message":"User does not have a valid key"};
@@ -74,14 +71,18 @@ function getCoinbaseBalanceRequestSignature(user, timestamp){
 }
 
 exports.processJobs = functions.pubsub.schedule('every day 00:00').onRun(async context => {
+    functions.logger.log("processJobs => begin");
     let userCollection = db.collection("users");
     userCollection.get().then(snapshot =>{
         snapshot.forEach(userDoc => {
             let user = userDoc.data();
+            functions.logger.log("processJobs => got user: " + user.email);
             userDoc.ref.collection("jobs").get().then(snapshot2 =>{
                 user.jobs = [];
                 snapshot2.forEach(jobDoc => {
-                    user.jobs.push(jobDoc.data());
+                    let job = jobDoc.data();
+                    functions.logger.log("processJobs => got job", job);
+                    user.jobs.push(job);
                 });
                 processUserOrders(user);
             });
