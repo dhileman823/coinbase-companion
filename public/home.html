@@ -52,6 +52,7 @@
     <nav class="navbar navbar-dark bg-primary">
         <div class="container-fluid">
             <span class="navbar-brand mb-0 h1">Coinbase Companion</span>
+            <span class="navbar-text" onclick="logout()" style="cursor:pointer">Logout (<span id="spanEmail"></span>)</span>
         </div>
     </nav>
     <div id="content" class="container-fluid">
@@ -166,10 +167,8 @@
         firebase.auth().onAuthStateChanged(user => { 
             if(user && user.email){
                 firebaseUser = user;
-                console.log(user.email);
-                console.log(user.uid);
                 document.getElementById("content").style.display = "block";
-
+                document.getElementById("spanEmail").innerHTML = firebaseUser.email;
                 loadUserData(user);
             }
         });

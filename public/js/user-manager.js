@@ -1,5 +1,13 @@
 var UserManager = {
 
+    createUser: function(firebaseUser){
+        var userData = {"email":firebaseUser.email, "key":"", "secret":"", "passphrase":""};
+        var collection = firebase.firestore().collection("users");
+        return collection.doc(firebaseUser.uid).set(userData).then(function(){
+            return "User created!";
+        });
+    },
+
     getUser: function(userId){
         var collection = firebase.firestore().collection("users");
         return collection.doc(userId).get().then(function(docRef){

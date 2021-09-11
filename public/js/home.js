@@ -1,3 +1,9 @@
+function logout(){
+    firebase.auth().signOut().then(function(){
+        window.location.href = "/";
+    });
+}
+
 function loadUserData(){
     UserManager.getUser(firebaseUser.uid).then(function(userDoc){
         var user = userDoc.data();
@@ -65,7 +71,9 @@ function loadUserData(){
     .catch(function(err){
         console.error(err);
         //no user found
-        document.getElementById("btnAddKey").style.display = "block";
+        UserManager.createUser(firebaseUser).then(function(){
+            loadUserData();
+        });
     });
 }
 
