@@ -70,37 +70,41 @@ function getCoinbaseBalanceRequestSignature(user, timestamp){
     return hmac.update(what).digest('base64');
 }
 
-exports.processJobs = functions.pubsub.schedule('every day 00:00').onRun(async context => {
+exports.processJobs = functions.pubsub.schedule('every day 12:00').timeZone('Etc/UTC').onRun(async context => {
     functions.logger.log("processJobs => begin");
     let userCollection = db.collection("users");
-    userCollection.get().then(snapshot =>{
-        functions.logger.log("processJobs => got snapshot");
-        snapshot.forEach(userDoc => {
-            let user = userDoc.data();
-            functions.logger.log("processJobs => got user: " + user.email);
-            userDoc.ref.collection("jobs").get().then(snapshot2 =>{
-                user.jobs = [];
-                snapshot2.forEach(jobDoc => {
-                    let job = jobDoc.data();
-                    functions.logger.log("processJobs => got job", job);
-                    user.jobs.push(job);
-                });
-                processUserOrders(user);
-            });
-        });
-    })
-    .catch(function(err){
-        functions.logger.log("processJobs => caught error", err);
+    functions.logger.log("processJobs => get users...");
+    const snapshot = await userCollection.get();
+    functions.logger.log("processJobs => got snapshot");
+    let promises = [];
+    snapshot.forEach(userDoc => {
+        let user = userDoc.data();
+        functions.logger.log("processJobs => got user: " + user.email);
+        let promise = processUserJobs(userDoc);
+        promises.push(promise);
     });
+    return Promise.all(promises);
 });
+
+async function processUserJobs(userDoc){
+    let user = userDoc.data();
+    user.jobs = [];
+    let jobDocs = await userDoc.ref.collection("jobs").get();
+    jobDocs.forEach(jobDoc => {
+        let job = jobDoc.data();
+        functions.logger.log("processJobs => got job", job);
+        user.jobs.push(job);
+    });
+    processUserOrders(user);
+}
 
 function processUserOrders(user){
     if(user.jobs.length > 0){
         if(user.key){
             for(let i=0; i<user.jobs.length; i++){
                 let job = user.jobs[i];
-                functions.logger.log("Process job " + job.asset + ", " + job.amount + " for user " + user.email, user.created);
-                var next = calculateNextDate(user.created, user.recurDays);
+                functions.logger.log("Process job " + job.asset + ", " + job.amount + " for user " + user.email, job.created);
+                var next = calculateNextDate(job.created, job.recurDays);
                 var now = new Date();
                 functions.logger.log("Process job - next", next);
                 functions.logger.log("Process job - nextDate: " + next.toDate().toUTCString());
@@ -114,11 +118,20 @@ function processUserOrders(user){
 }
 
 function calculateNextDate(timestamp, recurDays){
-    var currentTime = parseInt(new Date().getTime()/1000);
-    var diff = currentTime - timestamp.seconds;
+    functions.logger.log("calculateNextDate => begin");
+    functions.logger.log("calculateNextDate => passed timestamp", timestamp);
+    var currentTimestamp = admin.firestore.Timestamp.fromDate(new Date());
+    functions.logger.log("calculateNextDate => current timestamp", currentTimestamp);
+    var currentTime = currentTimestamp["_seconds"];
+    var diff = currentTime - timestamp["_seconds"];
+    functions.logger.log("calculateNextDate => diff " + diff);
     var diffDays = parseInt(diff / 86400);
+    functions.logger.log("calculateNextDate => diffDays " + diffDays);
     var prevOccur = parseInt(diffDays / recurDays);
-    var nextTimestamp = timestamp.seconds += (86400*recurDays*(prevOccur+1));
+    functions.logger.log("calculateNextDate => prevOccur " + prevOccur);
+    var nextTimestamp = timestamp;
+    nextTimestamp["_seconds"] += (86400*recurDays*(prevOccur+1));
+    functions.logger.log("calculateNextDate => nextTimestamp", nextTimestamp);
     return nextTimestamp;
 }
 
