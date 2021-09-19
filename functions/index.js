@@ -20,6 +20,22 @@ exports.getBalance = functions.https.onCall((data, context) => {
     });
 });
 
+exports.getPaymentMethods = functions.https.onCall((data, context) => {
+    const uid = context.auth.uid;
+    let userCollection = db.collection("users");
+    return userCollection.doc(uid).get().then(userDoc => {
+        var user = userDoc.data();
+        functions.logger.log("getPaymentMethods => got user");
+        if(userHasValidKey(user)){
+            functions.logger.log("getPaymentMethods => user has valid key");
+            return coinbasePaymentMethodsRequest(user);
+        }
+        else{
+            return {"message":"User does not have a valid key"};
+        }
+    });
+});
+
 function userHasValidKey(user){
     if(user && user.key && user.key.length>0 && user.secret && user.secret.length>0 && user.passphrase && user.passphrase.length>0){
         return true;
@@ -33,7 +49,7 @@ function coinbaseBalanceRequest(user){
     const accountsUrl = coinbaseApiUrl + "/accounts";
 
     var timestamp = Date.now() / 1000;
-    var signature = getCoinbaseBalanceRequestSignature(user, timestamp);
+    var signature = getRequestSignature(user, "/accounts", timestamp);
     var requestOptions = {
         "url": accountsUrl,
         "headers": {
@@ -53,10 +69,36 @@ function coinbaseBalanceRequest(user){
     });
 }
 
-function getCoinbaseBalanceRequestSignature(user, timestamp){
+function coinbasePaymentMethodsRequest(user){
+    functions.logger.log("getPaymentMethods => begin coinbasePaymentMethodsRequest");
+    const coinbaseApiUrl = "https://api.pro.coinbase.com";
+    const pmUrl = coinbaseApiUrl + "/payment-methods";
+
+    var timestamp = Date.now() / 1000;
+    var signature = getRequestSignature(user, "/payment-methods", timestamp);
+    var requestOptions = {
+        "url": pmUrl,
+        "headers": {
+            "CB-ACCESS-KEY": user.key,
+            "CB-ACCESS-SIGN": signature,
+            "CB-ACCESS-TIMESTAMP": timestamp,
+            "CB-ACCESS-PASSPHRASE": user.passphrase,
+            "User-Agent": "Firebase-function"
+        }
+    };
+    return new Promise(function(resolve, reject){
+        functions.logger.log("getPaymentMethods => begin request to coinbase: " + pmUrl);
+        request(requestOptions, function(error, response, body) {
+            functions.logger.log("getPaymentMethods => coinbase request finished", body);
+            resolve(body);
+        });
+    });
+}
+
+function getRequestSignature(user, path, timestamp){
     var crypto = require('crypto');
     var secret = user.secret;
-    var requestPath = '/accounts';
+    var requestPath = path;
     var body = ""; //no body for this GET request
     var method = 'GET';
     // create the prehash string by concatenating required parts

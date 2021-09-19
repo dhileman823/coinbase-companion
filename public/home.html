@@ -38,9 +38,9 @@
         font-family: 'Courier New', Courier, monospace;
       }
       .job {
-        background-color: lightgray;
+        background-color: lightblue;
         padding:5px;
-        margin:5px;
+        margin-top:5px;
         cursor:pointer;
         box-shadow: 0 2px 1px -1px rgba(0,0,0,.2),0 1px 1px 0 rgba(0,0,0,.14),0 1px 3px 0 rgba(0,0,0,.12);
       }
@@ -62,21 +62,25 @@
         <div id="memberContent">
             <hr/>
             <p>Account Balance: <span id="spanBalance" style="color:green"><span class="spinner-border spinner-border-sm"></span></span></p>
-            <h5>Recurring Purchases</h5>
+            <h5>Recurring Transactions</h5>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addDepositModal" style="width:49%">Add recurring deposit</button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPurchaseModal" style="width:49%;float:right">Add recurring order</button>
             <div id="listRecur">
                 <span class="spinner-border spinner-border-sm"></span>
             </div>
-            <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#addPurchaseModal">Add a recurring purchase</button>
+            <br/><br/>
+            <h5>Transaction History</h5>
+            <p>None.</p>
         </div>
 
-        <br/><br/>
-        
-<!-- TradingView Widget BEGIN -->
-<div style="height:400px">
+        <br/>
+        <h5>Markets</h5>
+<div style="height:540px">
 
+<!-- TradingView Widget BEGIN -->
 <div class="tradingview-widget-container">
   <div class="tradingview-widget-container__widget"></div>
-  <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com" rel="noopener" target="_blank"><span class="blue-text">Crypto</span></a> by TradingView</div>
+  <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com" rel="noopener" target="_blank"><span class="blue-text">Digital Currency</span></a> by TradingView</div>
   <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
   {
   "colorTheme": "light",
@@ -100,7 +104,7 @@
   "symbolActiveColor": "rgba(41, 98, 255, 0.12)",
   "tabs": [
     {
-      "title": "Crypto",
+      "title": "Digital Currency",
       "symbols": [
         {
           "s": "COINBASE:BTCUSD",
@@ -111,8 +115,16 @@
           "d": "Ethereum"
         },
         {
-          "s": "COINBASE:ADABTC",
+          "s": "COINBASE:ADAUSD",
           "d": "Cardano"
+        },
+        {
+          "s": "COINBASE:SOLUSD",
+          "d": "Solana"
+        },
+        {
+          "s": "COINBASE:DOTUSD",
+          "d": "Polkadot"
         }
       ]
     }
@@ -120,9 +132,9 @@
 }
   </script>
 </div>
+<!-- TradingView Widget END -->
 
 </div>
-<!-- TradingView Widget END -->
 
     </div>
 
@@ -146,24 +158,22 @@
         </div>
     </div>
 
-    <div class="modal fade" id="addPurchaseModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addDepositModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Add New Recurring Purchase</h5>
+                <h5 class="modal-title" id="exampleModalLabel">Add New Recurring Deposit</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label">Asset</label>
-                  <select id="selectAsset" class="form-control">
-                      <option value="BTCUSD">Bitcoin (BTC/USD)</option>
-                      <option value="ETHUSD">Ethereum (ETH/USD)</option>
-                      <option value="ADAUSD">Cardano (ETH/USD)</option>
+                  <label for="exampleFormControlInput1" class="form-label">Payment Method</label>
+                  <select id="selectPaymentMethod" class="form-control">
+                    <option value="-1">Loading...</option>
                   </select>
                 </div>
                 <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label">Amount $</label>
+                  <label for="exampleFormControlInput1" class="form-label">Amount (USD)</label>
                   <input id="txtAmount" type="number" class="form-control" placeholder="0.00" value="10.00"/>
                 </div>
                 <div class="mb-3">
@@ -172,10 +182,44 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="addRecur()">Save</button>
+                <button disabled="disabled" type="button" class="btn btn-primary" onclick="addDeposit()">Save</button>
             </div>
             </div>
         </div>
+    </div>
+
+    <div class="modal fade" id="addPurchaseModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+          <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Add New Recurring Purchase</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Asset</label>
+                <select id="selectAsset" class="form-control">
+                    <option value="BTC-USD">Bitcoin (BTC/USD)</option>
+                    <option value="ETH-USD">Ethereum (ETH/USD)</option>
+                    <option value="ADA-USD">Cardano (ADA/USD)</option>
+                    <option value="SOL-USD">Solana (SOL/USD)</option>
+                    <option value="DOT-USD">Polkadot (DOT/USD)</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Amount $</label>
+                <input id="txtAmount" type="number" class="form-control" placeholder="0.00" value="10.00"/>
+              </div>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Recurring every <input id="txtRecur" type="number" class="form-control" value="7" placeholder="0" style="width:70px;display:inline"/> day(s)</label>
+              </div>
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary" onclick="addRecur()">Save</button>
+          </div>
+          </div>
+      </div>
     </div>
 
     <div class="modal fade" id="viewPurchaseModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">

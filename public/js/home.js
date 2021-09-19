@@ -1,4 +1,5 @@
 var global = {"connected": false, "balance": 0.0, "jobDocs": []};
+loadPaymentMethods();
 
 function logout(){
     firebase.auth().signOut().then(function(){
@@ -66,6 +67,27 @@ function loadUserData(){
         UserManager.createUser(firebaseUser).then(function(){
             loadUserData();
         });
+    });
+}
+
+function loadPaymentMethods(){
+    var req = firebase.functions().httpsCallable("getPaymentMethods");
+    req().then(function(response){
+        if(response && response.data){
+            console.log(response);
+            var data = JSON.parse(response.data);
+            if(Array.isArray(data)){
+                if(data.length > 0){
+                    document.getElementById("selectPaymentMethod").innerHTML = "";
+                }
+                for(var i=0;i<data.length;i++){
+                    var option = document.createElement("option");
+                    option.innerHTML = data[i].name;
+                    option.id = data[i].id;
+                    document.getElementById("selectPaymentMethod").appendChild(option);
+                }
+            }
+        }
     });
 }
 
