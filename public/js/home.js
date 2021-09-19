@@ -16,7 +16,7 @@ function loadUserData(){
         //configure UI elements for user
         if(user.key && user.key.length > 0){
             //found user and key
-            document.getElementById("spanKeyPeek").innerHTML = user.key;
+            document.getElementById("spanKeyPeek").innerHTML = user.key.substring(0,5) + "..." + user.key.substring(user.key.length-5);
             document.getElementById("memberContent").style.display = "block";
             document.getElementById("btnAddKey").style.display = "none";
             document.getElementById("keySection").style.display = "block";
