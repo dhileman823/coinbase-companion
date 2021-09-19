@@ -104,35 +104,19 @@ function processUserOrders(user){
             for(let i=0; i<user.jobs.length; i++){
                 let job = user.jobs[i];
                 functions.logger.log("Process job " + job.asset + ", " + job.amount + " for user " + user.email, job.created);
-                var next = calculateNextDate(job.created, job.recurDays);
+                var next = job.nextPurchaseDate.toDate();
                 var now = new Date();
-                functions.logger.log("Process job - next", next);
-                functions.logger.log("Process job - nextDate: " + next.toDate().toUTCString());
+                functions.logger.log("Process job - nextDate: " + next.toUTCString());
                 functions.logger.log("Process job - nowDate: " + now.toUTCString());
+                functions.logger.log("now " + now.getTime() + " >< next " + next.getTime());
+                var timeForPurchase = now >= next;
+                functions.logger.log("timeForPurchase? " + timeForPurchase);
             }
         }
         else{
             functions.logger.log('Cannot process jobs for user ' + user.email + ": missing api-key.");
         }
     }
-}
-
-function calculateNextDate(timestamp, recurDays){
-    functions.logger.log("calculateNextDate => begin");
-    functions.logger.log("calculateNextDate => passed timestamp", timestamp);
-    var currentTimestamp = admin.firestore.Timestamp.fromDate(new Date());
-    functions.logger.log("calculateNextDate => current timestamp", currentTimestamp);
-    var currentTime = currentTimestamp["_seconds"];
-    var diff = currentTime - timestamp["_seconds"];
-    functions.logger.log("calculateNextDate => diff " + diff);
-    var diffDays = parseInt(diff / 86400);
-    functions.logger.log("calculateNextDate => diffDays " + diffDays);
-    var prevOccur = parseInt(diffDays / recurDays);
-    functions.logger.log("calculateNextDate => prevOccur " + prevOccur);
-    var nextTimestamp = timestamp;
-    nextTimestamp["_seconds"] += (86400*recurDays*(prevOccur+1));
-    functions.logger.log("calculateNextDate => nextTimestamp", nextTimestamp);
-    return nextTimestamp;
 }
 
 function getCoinbasePlaceOrderSignature(user, job, timestamp){

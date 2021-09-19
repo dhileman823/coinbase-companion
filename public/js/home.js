@@ -1,3 +1,5 @@
+var global = {"connected": false, "balance": 0.0, "jobDocs": []};
+
 function logout(){
     firebase.auth().signOut().then(function(){
         window.location.href = "/";
@@ -5,8 +7,12 @@ function logout(){
 }
 
 function loadUserData(){
+    document.getElementById("spanBalance").innerHTML = "<span class='spinner-border spinner-border-sm'></span>";
+    document.getElementById("listRecur").innerHTML = "<span class='spinner-border spinner-border-sm'></span>";
     UserManager.getUser(firebaseUser.uid).then(function(userDoc){
         var user = userDoc.data();
+        loadUserJobs(userDoc);
+
         //configure UI elements for user
         if(user.key && user.key.length > 0){
             //found user and key
@@ -18,28 +24,33 @@ function loadUserData(){
             var req = firebase.functions().httpsCallable("getBalance");
             req().then(function(response){
                 if(response && response.data){
-                    var portfolio = JSON.parse(response.data);
-                    if(portfolio){
+                    console.log(response);
+                    var data = JSON.parse(response.data);
+                    if(Array.isArray(data)){
                         //find usd
+                        var portfolio = data;
                         var usd = -1;
                         for(var i=0;i<portfolio.length;i++){
                             var wallet = portfolio[i];
                             if(wallet.currency == "USD"){
                                 usd = wallet.balance;
+                                global.connected = true;
+                                global.balance = usd;
                             }
                         }
+                        renderUserJobs(global.jobDocs);
                         document.getElementById("spanBalance").innerHTML = usd + " USD";
                         document.getElementById("spanBalance").style.color = "green";
                     }
                     else{
                         document.getElementById("spanBalance").innerHTML = "Unable to connect to Coinbase.";
                         document.getElementById("spanBalance").style.color = "red";
+                        if(data.message && data.message.length > 0){
+                            document.getElementById("spanBalance").innerHTML += " " + data.message;
+                        }
                     }
                 }
-                console.log(response);
-                
             });
-            
         }
         else{
             //found user, but no key
@@ -48,36 +59,6 @@ function loadUserData(){
             document.getElementById("spanBalance").innerHTML = "Unable to connect to Coinbase. Add an API-Key.";
             document.getElementById("spanBalance").style.color = "red";
         }
-
-        //get jobs
-        UserManager.getUserJobs(userDoc).then(function(jobDocs){
-            document.getElementById("listRecur").innerHTML = "";
-            for(var i=0;i<jobDocs.length;i++){
-                var jobDoc = jobDocs[i];
-                var job = jobDoc.data();
-                var tooltip = "";
-                var status = "inactive";
-                if(cbBalance){
-                    status = "active";
-                    tooltip = status;
-                }
-                else{
-                    status = "inactive";
-                    tooltip = "Unable to connect to Coinbase";
-                }
-                var html = "<div class='job' onclick='loadViewModal(\"{jobId}\")')'><span class='{status}' title='{tooltip}'>&nbsp;</span> Buy {currency}, {amount} every {recur} day(s)</div>";
-                html = html.replace("{jobId}", jobDoc.id);
-                html = html.replace("{status}", status);
-                html = html.replace("{tooltip}", tooltip);
-                html = html.replace("{currency}", job.asset);
-                html = html.replace("{amount}", "$"+job.amount);
-                html = html.replace("{recur}", job.recurDays);
-                document.getElementById("listRecur").innerHTML += html;
-            }
-        })
-        .catch(function(err){
-            console.error(err);    
-        });
     })
     .catch(function(err){
         console.error(err);
@@ -86,6 +67,48 @@ function loadUserData(){
             loadUserData();
         });
     });
+}
+
+function loadUserJobs(userDoc){
+    UserManager.getUserJobs(userDoc).then(function(jobDocs){
+        global.jobDocs = jobDocs;
+        renderUserJobs(jobDocs);
+    })
+    .catch(function(err){
+        console.error(err);    
+    });
+}
+
+function renderUserJobs(jobDocs){
+    document.getElementById("listRecur").innerHTML = "";
+    for(var i=0;i<jobDocs.length;i++){
+        var jobDoc = jobDocs[i];
+        var job = jobDoc.data();
+        var tooltip = "";
+        var status = "inactive";
+        if(global.connected && global.balance > job.amount){
+            status = "active";
+            tooltip = status;
+        }
+        else{
+            if(!global.connected){
+                status = "inactive";
+                tooltip = "Unable to connect to Coinbase.";
+            }
+            else{
+                status = "inactive";
+                tooltip = "Insufficent funds.";
+            }
+        }
+        var html = "<div class='job' title='{tooltip}' onclick='loadViewModal(\"{jobId}\")')'><span class='{status}'>&nbsp;</span> Buy {currency}, {amount} every {recur} day(s) <i class='bi-pencil-fill' style='float:right'></i></div>";
+        html = html.replace("{jobId}", jobDoc.id);
+        html = html.replace("{status}", status);
+        html = html.replace("{tooltip}", tooltip);
+        html = html.replace("{currency}", job.asset);
+        html = html.replace("{amount}", "$"+job.amount);
+        html = html.replace("{recur}", job.recurDays);
+        document.getElementById("listRecur").innerHTML += html;
+    }
 }
 
 function addApiKey(){
@@ -108,31 +131,25 @@ function removeApiKey(){
 }
 
 function loadViewModal(jobId){
+    document.getElementById("alertFundsWarning").style.display = "none";
     UserManager.getUserJob(firebaseUser.uid, jobId).then(function(jobDoc){
         var job = jobDoc.data();
-        console.log(job);
         document.getElementById("viewJobId").value = jobId;
         document.getElementById("spanViewAsset").innerHTML = job.asset;
         document.getElementById("spanViewAmount").innerHTML = job.amount;
         document.getElementById("spanViewRecur").innerHTML = job.recurDays;
         document.getElementById("spanViewCreated").innerHTML = job.created.toDate().toUTCString();
-        var next = job.created;
-        next.seconds = calculateNextDate(job.created, job.recurDays);
-        var nextDate = next.toDate();
-        nextDate.setUTCHours(5,0,0,0);
-        document.getElementById("spanViewNext").innerHTML = nextDate.toUTCString();
-
+        document.getElementById("spanViewNext").innerHTML = job.nextPurchaseDate.toDate().toUTCString();
+        if(!global.connected){
+            document.getElementById("alertFundsWarning").style.display = "block";
+            document.getElementById("alertFundsWarning").innerHTML = "Unable to connect to Coinbase Pro. Make sure you have added a valid API-Key.";
+        }
+        else if(global.balance < job.amount){
+            document.getElementById("alertFundsWarning").style.display = "block";
+            document.getElementById("alertFundsWarning").innerHTML = "Insufficent funds. Deposit more USD into your Coinbase Pro account before next purchase date.";
+        }
     });
     $("#viewPurchaseModal").modal("show");
-}
-
-function calculateNextDate(timestamp, recurDays){
-    var currentTime = parseInt(new Date().getTime()/1000);
-    var diff = currentTime - timestamp.seconds;
-    var diffDays = parseInt(diff / 86400);
-    var prevOccur = parseInt(diffDays / recurDays);
-    var nextTimestamp = timestamp.seconds += (86400*recurDays*(prevOccur+1));
-    return nextTimestamp;
 }
 
 function addRecur(){
@@ -141,6 +158,9 @@ function addRecur(){
     job.amount = parseFloat(document.getElementById("txtAmount").value);
     job.recurDays = parseInt(document.getElementById("txtRecur").value);
     job.created = new Date();
+    job.nextPurchaseDate = addDays(job.created, job.recurDays);
+    job.nextPurchaseDate.setUTCHours(12,0,0,0);
+
     if(job.amount < 1){
         alert("The amount must be at least 1");
         return;
@@ -165,3 +185,9 @@ function deleteRecur(){
         });
     }
 }
+
+function addDays(date, days) {
+    var result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+  }
