@@ -1,5 +1,7 @@
 var global = {"connected": false, "balance": 0.0, "jobDocs": []};
-loadPaymentMethods();
+document.addEventListener('DOMContentLoaded', function() {
+    loadPaymentMethods();
+});
 
 function logout(){
     firebase.auth().signOut().then(function(){
@@ -74,8 +76,9 @@ function loadPaymentMethods(){
     var req = firebase.functions().httpsCallable("getPaymentMethods");
     req().then(function(response){
         if(response && response.data){
-            console.log(response);
             var data = JSON.parse(response.data);
+            global.pm = data;
+            console.log(global.pm);
             if(Array.isArray(data)){
                 if(data.length > 0){
                     document.getElementById("selectPaymentMethod").innerHTML = "";
@@ -83,7 +86,7 @@ function loadPaymentMethods(){
                 for(var i=0;i<data.length;i++){
                     var option = document.createElement("option");
                     option.innerHTML = data[i].name;
-                    option.id = data[i].id;
+                    option.value = data[i].id;
                     document.getElementById("selectPaymentMethod").appendChild(option);
                 }
             }
@@ -108,6 +111,19 @@ function renderUserJobs(jobDocs){
         var job = jobDoc.data();
         var tooltip = "";
         var status = "inactive";
+        var jobClass = "job";
+        var action = "";
+        var onClick = "";
+        if(job.type == "deposit"){
+            action = "Depositing";
+            jobClass += " job-deposit";
+            onClick = "loadDepositViewModal";
+        }
+        else{
+            action = "Buying";
+            jobClass += " job-order";
+            onClick = "loadViewModal";
+        }
         if(global.connected && global.balance > job.amount){
             status = "active";
             tooltip = status;
@@ -122,13 +138,16 @@ function renderUserJobs(jobDocs){
                 tooltip = "Insufficent funds.";
             }
         }
-        var html = "<div class='job' title='{tooltip}' onclick='loadViewModal(\"{jobId}\")')'><span class='{status}'>&nbsp;</span> Buy {currency}, {amount} every {recur} day(s) <i class='bi-pencil-fill' style='float:right'></i></div>";
+        var html = "<div class='{jobClass}' title='{tooltip}' onclick='{onClick}(\"{jobId}\")')'><span class='{status}'>&nbsp;</span> {action} {amount} {currency},  {nextPurchaseDate} <i class='bi-three-dots-vertical' style='float:right'></i></div>";
+        html = html.replace("{jobClass}", jobClass);
         html = html.replace("{jobId}", jobDoc.id);
+        html = html.replace("{onClick}", onClick);
+        html = html.replace("{action}", action);
         html = html.replace("{status}", status);
         html = html.replace("{tooltip}", tooltip);
         html = html.replace("{currency}", job.asset);
         html = html.replace("{amount}", "$"+job.amount);
-        html = html.replace("{recur}", job.recurDays);
+        html = html.replace("{nextPurchaseDate}", job.nextPurchaseDate.toDate().toLocaleDateString());
         document.getElementById("listRecur").innerHTML += html;
     }
 }
@@ -174,7 +193,29 @@ function loadViewModal(jobId){
     $("#viewPurchaseModal").modal("show");
 }
 
-function addRecur(){
+function loadDepositViewModal(jobId){
+    UserManager.getUserJob(firebaseUser.uid, jobId).then(function(jobDoc){
+        var job = jobDoc.data();
+        document.getElementById("viewDepositJobId").value = jobId;
+        document.getElementById("spanViewPaymentMethod").innerHTML = job.paymentMethod;
+        document.getElementById("spanViewDepositAmount").innerHTML = job.amount;
+        document.getElementById("spanViewDepositRecur").innerHTML = job.recurDays;
+        document.getElementById("spanViewDepositCreated").innerHTML = job.created.toDate().toUTCString();
+        document.getElementById("spanViewDepositNext").innerHTML = job.nextPurchaseDate.toDate().toUTCString();
+        if(!global.connected){
+            document.getElementById("alertDepositWarning").style.display = "block";
+            document.getElementById("alertDepositWarning").innerHTML = "Unable to connect to Coinbase Pro. Make sure you have added a valid API-Key.";
+        }
+        for(var i=0;i<global.pm.length;i++){
+            if(global.pm[i].id == job.paymentMethod){
+                document.getElementById("spanViewPaymentMethod").innerHTML = global.pm[i].name;
+            }
+        }
+    });
+    $("#viewDepositModal").modal("show");
+}
+
+function addRecurOrder(){
     var job = {};
     job.asset = document.getElementById("selectAsset").value;
     job.amount = parseFloat(document.getElementById("txtAmount").value);
@@ -182,6 +223,7 @@ function addRecur(){
     job.created = new Date();
     job.nextPurchaseDate = addDays(job.created, job.recurDays);
     job.nextPurchaseDate.setUTCHours(12,0,0,0);
+    job.type = "order";
 
     if(job.amount < 1){
         alert("The amount must be at least 1");
@@ -197,6 +239,31 @@ function addRecur(){
     });
 }
 
+function addRecurDeposit(){
+    var job = {};
+    job.asset = "USD";
+    job.paymentMethod = document.getElementById("selectPaymentMethod").value;
+    job.amount = parseFloat(document.getElementById("txtAmountDeposit").value);
+    job.recurDays = parseInt(document.getElementById("txtRecurDeposit").value);
+    job.created = new Date();
+    job.nextPurchaseDate = addDays(job.created, job.recurDays);
+    job.nextPurchaseDate.setUTCHours(12,0,0,0);
+    job.type = "deposit";
+
+    if(job.amount < 1){
+        alert("The amount must be at least 1");
+        return;
+    }
+    if(job.recurDays < 1){
+        alert("The number of days must be at least 1");
+        return;
+    }
+    UserManager.createJob(firebaseUser.uid, job).then(function(response){
+        $("#addDepositModal").modal("hide");
+        loadUserData();
+    });
+}
+
 function deleteRecur(){
     var affirm = confirm("Are you sure you want to delete this recurring purchase?");
     if(affirm){
@@ -208,8 +275,19 @@ function deleteRecur(){
     }
 }
 
+function deleteRecurDeposit(){
+    var affirm = confirm("Are you sure you want to delete this recurring deposit?");
+    if(affirm){
+        var jobId = document.getElementById("viewDepositJobId").value;
+        UserManager.deleteJob(firebaseUser.uid, jobId).then(function(response){
+            $("#viewDepositModal").modal("hide");
+            loadUserData();
+        });
+    }
+}
+
 function addDays(date, days) {
     var result = new Date(date);
     result.setDate(result.getDate() + days);
     return result;
-  }
+}

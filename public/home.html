@@ -38,11 +38,16 @@
         font-family: 'Courier New', Courier, monospace;
       }
       .job {
-        background-color: lightblue;
         padding:5px;
         margin-top:5px;
         cursor:pointer;
         box-shadow: 0 2px 1px -1px rgba(0,0,0,.2),0 1px 1px 0 rgba(0,0,0,.14),0 1px 3px 0 rgba(0,0,0,.12);
+      }
+      .job-order {
+        background-color: lightblue;
+      }
+      .job-deposit {
+        background-color: lightgreen;
       }
       .bold {
         font-weight: bold;
@@ -75,7 +80,7 @@
 
         <br/>
         <h5>Markets</h5>
-<div style="height:540px">
+<div style="height:540px"><!-- TradingView wrapper div BEGIN -->
 
 <!-- TradingView Widget BEGIN -->
 <div class="tradingview-widget-container">
@@ -134,7 +139,7 @@
 </div>
 <!-- TradingView Widget END -->
 
-</div>
+</div><!-- TradingView wrapper div END -->
 
     </div>
 
@@ -174,15 +179,15 @@
                 </div>
                 <div class="mb-3">
                   <label for="exampleFormControlInput1" class="form-label">Amount (USD)</label>
-                  <input id="txtAmount" type="number" class="form-control" placeholder="0.00" value="10.00"/>
+                  <input id="txtAmountDeposit" type="number" class="form-control" placeholder="0.00" value="10.00"/>
                 </div>
                 <div class="mb-3">
-                  <label for="exampleFormControlInput1" class="form-label">Recurring every <input id="txtRecur" type="number" class="form-control" value="7" placeholder="0" style="width:70px;display:inline"/> day(s)</label>
+                  <label for="exampleFormControlInput1" class="form-label">Recurring every <input id="txtRecurDeposit" type="number" class="form-control" value="7" placeholder="0" style="width:70px;display:inline"/> day(s)</label>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button disabled="disabled" type="button" class="btn btn-primary" onclick="addDeposit()">Save</button>
+                <button type="button" class="btn btn-success" onclick="addRecurDeposit()">Save</button>
             </div>
             </div>
         </div>
@@ -216,7 +221,7 @@
           </div>
           <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="button" class="btn btn-primary" onclick="addRecur()">Save</button>
+              <button type="button" class="btn btn-primary" onclick="addRecurOrder()">Save</button>
           </div>
           </div>
       </div>
@@ -256,6 +261,45 @@
           <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
               <button type="button" class="btn btn-danger" onclick="deleteRecur()">Delete</button>
+          </div>
+          </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="viewDepositModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+          <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Recurring Deposit</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+              <div id="alertDepositWarning" class="alert alert-danger" role="alert" style="display:none">
+              </div>
+              <input type="hidden" id="viewDepositJobId" value=""/>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Payment Method</label>
+                <div id="spanViewPaymentMethod" class="bold"></div>
+              </div>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Amount (USD)</label>
+                <div id="spanViewDepositAmount" class="bold"></div>
+              </div>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Recurring every <span id="spanViewDepositRecur" class="bold"></span> day(s)</label>
+              </div>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Created</label>
+                <div id="spanViewDepositCreated" class="bold"></div>
+              </div>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Next Deposit</label>
+                <div id="spanViewDepositNext" class="bold"></div>
+              </div>
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-danger" onclick="deleteRecurDeposit()">Delete</button>
           </div>
           </div>
       </div>
