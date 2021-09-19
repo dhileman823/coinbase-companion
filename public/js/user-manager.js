@@ -16,7 +16,7 @@ var UserManager = {
     },
 
     getUserJobs: function(userDoc){
-        return userDoc.ref.collection("jobs").get().then(function(querySnapshot){
+        return userDoc.ref.collection("jobs").orderBy("nextPurchaseDate").get().then(function(querySnapshot){
             let jobDocs = [];
             querySnapshot.forEach(function(doc){
                 jobDocs.push(doc);

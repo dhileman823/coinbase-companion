@@ -1,7 +1,4 @@
 var global = {"connected": false, "balance": 0.0, "jobDocs": []};
-document.addEventListener('DOMContentLoaded', function() {
-    loadPaymentMethods();
-});
 
 function logout(){
     firebase.auth().signOut().then(function(){
@@ -14,6 +11,7 @@ function loadUserData(){
     document.getElementById("listRecur").innerHTML = "<span class='spinner-border spinner-border-sm'></span>";
     UserManager.getUser(firebaseUser.uid).then(function(userDoc){
         var user = userDoc.data();
+        global.user = user;
         loadUserJobs(userDoc);
 
         //configure UI elements for user
@@ -27,7 +25,6 @@ function loadUserData(){
             var req = firebase.functions().httpsCallable("getBalance");
             req().then(function(response){
                 if(response && response.data){
-                    console.log(response);
                     var data = JSON.parse(response.data);
                     if(Array.isArray(data)){
                         //find usd
@@ -66,19 +63,20 @@ function loadUserData(){
     .catch(function(err){
         console.error(err);
         //no user found
-        UserManager.createUser(firebaseUser).then(function(){
-            loadUserData();
-        });
+        if(!global.user){
+            UserManager.createUser(firebaseUser).then(function(){
+                loadUserData();
+            });
+        }
     });
 }
 
 function loadPaymentMethods(){
     var req = firebase.functions().httpsCallable("getPaymentMethods");
     req().then(function(response){
-        if(response && response.data){
+        if(response && response.data && !response.data.message){
             var data = JSON.parse(response.data);
             global.pm = data;
-            console.log(global.pm);
             if(Array.isArray(data)){
                 if(data.length > 0){
                     document.getElementById("selectPaymentMethod").innerHTML = "";
@@ -89,6 +87,7 @@ function loadPaymentMethods(){
                     option.value = data[i].id;
                     document.getElementById("selectPaymentMethod").appendChild(option);
                 }
+                renderUserJobs(global.jobDocs);
             }
         }
     });
@@ -124,19 +123,31 @@ function renderUserJobs(jobDocs){
             jobClass += " job-order";
             onClick = "loadViewModal";
         }
-        if(global.connected && global.balance > job.amount){
-            status = "active";
-            tooltip = status;
-        }
-        else{
-            if(!global.connected){
-                status = "inactive";
-                tooltip = "Unable to connect to Coinbase.";
+        if(global.connected){
+            if(job.type == "deposit"){
+                if(global.pm && global.pm.length > 0){
+                    status = "active";
+                    tooltip = status;
+                }
+                else {
+                    status = "inactive";
+                    tooltip = "No available payment methods.";
+                }
             }
             else{
-                status = "inactive";
-                tooltip = "Insufficent funds.";
+                if(global.balance > job.amount){
+                    status = "active";
+                    tooltip = status;
+                }
+                else{
+                    status = "inactive";
+                    tooltip = "Insufficent funds.";
+                }
             }
+        }
+        else{
+            status = "inactive";
+            tooltip = "Unable to connect to Coinbase.";
         }
         var html = "<div class='{jobClass}' title='{tooltip}' onclick='{onClick}(\"{jobId}\")')'><span class='{status}'>&nbsp;</span> {action} {amount} {currency},  {nextPurchaseDate} <i class='bi-three-dots-vertical' style='float:right'></i></div>";
         html = html.replace("{jobClass}", jobClass);
@@ -159,6 +170,7 @@ function addApiKey(){
     UserManager.addUserKey(firebaseUser.uid, newKey, newSecret, newPassphrase).then(function(response){
         $("#addKeyModal").modal("hide");
         loadUserData();
+        loadPaymentMethods();
     });
 }
 
@@ -194,6 +206,7 @@ function loadViewModal(jobId){
 }
 
 function loadDepositViewModal(jobId){
+    document.getElementById("alertDepositWarning").style.display = "none";
     UserManager.getUserJob(firebaseUser.uid, jobId).then(function(jobDoc){
         var job = jobDoc.data();
         document.getElementById("viewDepositJobId").value = jobId;
@@ -222,7 +235,7 @@ function addRecurOrder(){
     job.recurDays = parseInt(document.getElementById("txtRecur").value);
     job.created = new Date();
     job.nextPurchaseDate = addDays(job.created, job.recurDays);
-    job.nextPurchaseDate.setUTCHours(12,0,0,0);
+    job.nextPurchaseDate.setUTCHours(12,0,0,1);
     job.type = "order";
 
     if(job.amount < 1){

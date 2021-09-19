@@ -68,13 +68,15 @@
             <hr/>
             <p>Account Balance: <span id="spanBalance" style="color:green"><span class="spinner-border spinner-border-sm"></span></span></p>
             <h5>Recurring Transactions</h5>
-            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addDepositModal" style="width:49%">Add recurring deposit</button>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPurchaseModal" style="width:49%;float:right">Add recurring order</button>
             <div id="listRecur">
                 <span class="spinner-border spinner-border-sm"></span>
             </div>
+            <div style="margin-top:5px">
+              <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addDepositModal" style="width:49%">Add recurring deposit</button>
+              <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPurchaseModal" style="width:49%;float:right">Add recurring order</button>
+            </div>
             <br/><br/>
-            <h5>Transaction History</h5>
+            <h5>Recent Transaction History</h5>
             <p>None.</p>
         </div>
 
@@ -315,6 +317,7 @@
             if(user && user.email){
                 firebaseUser = user;
                 document.getElementById("content").style.display = "block";
+                loadPaymentMethods();
                 loadUserData(user);
             }
         });
