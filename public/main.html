@@ -26,13 +26,19 @@
 
     <link type="text/css" rel="stylesheet" href="css/settings.css"/>
 
+    <style>
+      .mdl-shadow--2dp {
+        box-shadow: none;
+      }
+    </style>
+
   </head>
   <body>
 
     <nav class="navbar navbar-dark bg-dark">
         <div class="container-fluid">
             <span class="navbar-brand mb-0 h1">Coinbase Companion</span>
-            <span class="navbar-text" onclick="logout()" style="cursor:pointer">Logout</span>
+            <span class="navbar-text" id="btnLogout" onclick="logout()" style="cursor:pointer;display:none">Logout</span>
         </div>
     </nav>
 
@@ -49,7 +55,7 @@
     </ul>
     <div class="tab-content" id="myTabContent">
         <div class="tab-pane fade show active" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-            <h6 style="margin-top:10px">Cryptocurrency</h6>
+            <h6 style="margin-top:10px;margin-left:5px;">Cryptocurrency</h6>
             <div style="height:540px;margin-top:10px"><!-- TradingView wrapper div BEGIN -->
                 <!-- TradingView Widget BEGIN -->
                 <div class="tradingview-widget-container">
@@ -116,6 +122,19 @@
         </div>
     </div>
 
+    <div class="modal fade" id="signInModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <section id="firebaseui-auth-container"></section>
+            </div>
+          </div>
+      </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
           // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
@@ -123,9 +142,11 @@
           firebase.auth().onAuthStateChanged(user => { 
               console.log("Auth: user " + user);
               if(user && user.email){
+                document.getElementById("btnLogout").style.display = "inline";
                 onPageLoad(user);
               }
               else{
+                document.getElementById("btnLogout").style.display = "none";
                 onPageLoad(null);
               }
           });
@@ -156,6 +177,32 @@
           } catch (e) {
             console.error(e);
           }
+
+          const firebaseUI = new firebaseui.auth.AuthUI(firebase.auth());
+          const firebaseUiConfig = {
+            callbacks: {
+              signInSuccessWithAuthResult: function (authResult, redirectUrl) {
+                // User successfully signed in.
+                // Return type determines whether we continue the redirect automatically
+                // or whether we leave that to developer to handle.
+                return true;
+              },
+              uiShown: () => {
+                //document.getElementById('loader').style.display = 'none';
+              },
+            },
+            signInFlow: 'popup',
+            signInSuccessUrl: 'main.html',
+            signInOptions: [
+              firebase.auth.EmailAuthProvider.PROVIDER_ID,
+            ],
+            credentialHelper: firebaseui.auth.CredentialHelper.NONE,
+            // Your terms of service url.
+            tosUrl: 'https://example.com/terms',
+            // Your privacy policy url.
+            privacyPolicyUrl: 'https://example.com/privacy',
+          };
+          firebaseUI.start('#firebaseui-auth-container', firebaseUiConfig);
         });
       </script>
   </body>

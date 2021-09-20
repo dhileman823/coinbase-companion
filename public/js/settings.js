@@ -1,8 +1,7 @@
 var SettingsWidgetFactory = {
-    newSettingsWidget: function(firebaseUser){
+    newSettingsWidget: function(){
         var domNode = document.createElement("div");
         var settingsWidget = {
-            "firebaseUser":firebaseUser,
             "domNode":domNode, 
             "props":{},
             "placeAt":null, 
@@ -16,25 +15,46 @@ var SettingsWidgetFactory = {
         };
 
         settingsWidget.onSignIn = function(){
-            console.log("in onSignIn");
+            $("#signInModal").modal("show");
         };
 
-        settingsWidget.render = function(){
-            if(firebaseUser && firebaseUser.email){
+        settingsWidget.preRender = function(){
+            if(_state.firebaseUser && _state.firebaseUser.email){
                 this.props.settingsSectionSignInDisplay = "none";
                 this.props.settingsSectionContentDisplay = "block";
             }
+        };
+
+        settingsWidget.render = function(){
             var templateString = 
-            `<div class="settings-widget" style="margin:5px">
+            `<div class="settings-widget" style="margin:10px">
                 <div class="section-sign-in" style="display:${this.props.settingsSectionSignInDisplay}">
-                    <button class="btn btn-primary" attach="onSignIn">Sign In</button
+                    <button class="btn btn-primary" attach="onSignIn">Sign In</button>
                 </div>
                 <div id="settingsSectionContent" style="display:${this.props.settingsSectionContentDisplay}">
-                    This is the main content
+                    <h6>${_state.firebaseUser.email}</h6>
+                    <div>
+                        API-Key
+                        <div style="margin-left:10px">
+                            <div><button class="btn btn-primary">Add Key</button></div>
+                            <div><span><span class="spinner-border spinner-border-sm"></span></span><button class="btn btn-danger">[RM]</button></div>
+                        </div>
+                    </div>
+                    <div>
+                        Balance
+                        <div style="margin-left:10px">
+                            <span><span class="spinner-border spinner-border-sm"></span></span>
+                        </div>
+                    </div>
+                    <div>
+                        Payment Method
+                        <div style="margin-left:10px">
+                            <span><span class="spinner-border spinner-border-sm"></span></span>
+                        </div>
+                    </div>
                 </div>
             </div>`;
             this.domNode.innerHTML = templateString;
-            this.attachEvents();
         };
 
         settingsWidget.attachEvents = function(){
@@ -43,7 +63,6 @@ var SettingsWidgetFactory = {
                 var button = buttons[i];
                 var attach = button.getAttribute("attach");
                 if(attach){
-                    console.log(this);
                     button.addEventListener("click", this[attach]);
                 }
             }
@@ -51,7 +70,9 @@ var SettingsWidgetFactory = {
 
         settingsWidget.placeAt = function(element){
             element.appendChild(this.domNode);
+            this.preRender();
             this.render();
+            this.attachEvents();
         };
         return settingsWidget;
     }
