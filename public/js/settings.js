@@ -1,5 +1,6 @@
 var SettingsWidgetFactory = {
     newSettingsWidget: function(){
+        var spinner = "<span class='spinner-border spinner-border-sm'></span>";
         var domNode = document.createElement("div");
         var settingsWidget = {
             "domNode":domNode, 
@@ -12,10 +13,15 @@ var SettingsWidgetFactory = {
         settingsWidget.props = {
             "signInDisplay": "block",
             "contentDisplay": "none",
-            "addKeyDisplay": "none",
+            "keySectionDisplay": "none",
+            "addKeyButtonDisplay": "none",
             "keyDisplay": "none",
             "balanceDisplay": "none",
-            "paymentMethodDisplay": "none"
+            "paymentMethodDisplay": "none",
+            "email": spinner,
+            "apiKey": spinner,
+            "balance": spinner,
+            "paymentMethod": spinner
         };
 
         settingsWidget.onSignIn = function(){
@@ -23,9 +29,30 @@ var SettingsWidgetFactory = {
         };
 
         settingsWidget.preRender = function(){
+            console.log("preRender");
+            console.log(_state);
             if(_state.firebaseUser && _state.firebaseUser.email){
                 this.props.signInDisplay = "none";
                 this.props.contentDisplay = "block";
+            }
+            if(_state.user){
+                this.props.email = _state.firebaseUser.email;
+                this.props.keySectionDisplay = "block";
+                if(_state.user.key && _state.user.key.length > 0){
+                    this.props.keyDisplay = "block";
+                    this.props.apiKey = _state.user.key;
+                    this.props.balanceDisplay = "block";
+                    this.props.paymentMethodDisplay = "block";
+                }
+                else{
+                    this.props.addKeyButtonDisplay = "block";
+                }
+            }
+            if(_state.cbBalance){
+                this.props.balance = _state.cbBalance;
+            }
+            if(_state.cbPaymentMethodName){
+                this.props.paymentMethod = _state.cbPaymentMethodName;
             }
         };
 
@@ -36,24 +63,24 @@ var SettingsWidgetFactory = {
                     <button class="btn btn-primary" attach="onSignIn">Sign In</button>
                 </div>
                 <div id="settingsSectionContent" style="display:${this.props.contentDisplay}">
-                    <h6><span></span><span class="spinner-border spinner-border-sm"></span></h6>
-                    <div>
+                    <h6><span>${this.props.email}</span></h6>
+                    <div style="display:${this.props.keySectionDisplay}">
                         API-Key
                         <div style="margin-left:10px">
-                            <div style="display:${this.props.addKeyDisplay}"><button class="btn btn-primary">Add Key</button></div>
-                            <div style="display:${this.props.keyDisplay}"><span><span class="spinner-border spinner-border-sm"></span></span><button class="btn btn-danger">[RM]</button></div>
+                            <div style="display:${this.props.addKeyButtonDisplay}"><button class="btn btn-primary">Add Key</button></div>
+                            <div style="display:${this.props.keyDisplay}"><span>${this.props.apiKey}</span><button class="btn btn-danger">[RM]</button></div>
                         </div>
                     </div>
                     <div style="display:${this.props.balanceDisplay}">
                         Balance
                         <div style="margin-left:10px">
-                            <span><span class="spinner-border spinner-border-sm"></span></span>
+                            <span>${this.props.balance}</span>
                         </div>
                     </div>
-                    <div style="display:${this.props.paymentMethodDisplay}">
+                    <div style="margin-top:10px;display:${this.props.paymentMethodDisplay}">
                         Payment Method
                         <div style="margin-left:10px">
-                            <span><span class="spinner-border spinner-border-sm"></span></span>
+                            <span>${this.props.paymentMethod}</span>
                         </div>
                     </div>
                 </div>
@@ -74,6 +101,12 @@ var SettingsWidgetFactory = {
 
         settingsWidget.placeAt = function(element){
             element.appendChild(this.domNode);
+            this.preRender();
+            this.render();
+            this.attachEvents();
+        };
+
+        settingsWidget.reload = function(){
             this.preRender();
             this.render();
             this.attachEvents();
