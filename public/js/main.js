@@ -1,6 +1,6 @@
 var _state = {
     "firebaseUser":null,
-    "user":{},
+    "user":null,
     "jobs":[],
     "cbBalance":-1,
     "cbPaymentMethodId":null,
@@ -16,26 +16,54 @@ function onPageLoad(firebaseUser){
     //create order widget
 
     //get user and jobs objects
-    //trigger UI updates with new 
-
-    //get coinbase balance and payment method
-    getBalance().then(function(r){
-        console.log(r);
-    });
+    if(firebaseUser){
+        UserManager.getUser(firebaseUser.uid).then(function(userDoc){
+            if(userDoc.exists){
+                var user = userDoc.data();
+                console.log(user);
+                _state.user = user;
+                loadCoinbaseData();
+            }
+            else{
+                initNewUser();
+            }
+        });
+    }
 
     //trigger UI updates with new data
     //widget.rerender?
 }
 
+function initNewUser(){
+    console.log("Init first time user");
+    UserManager.createUser(firebaseUser).then(function(response){
+        console.log(response);
+        if(response == UserManager.RESPONSE_USER_CREATED){
+            window.location.href = "main.html";
+        }
+    });
+}
+
+function loadCoinbaseData(){
+    if(_state.user && _state.user.key && _state.user.key.length > 0){
+        getBalance().then(function(r){
+            console.log(r);
+        });
+    }
+}
+
 async function getBalance(){
-    var requestBalance = firebase.functions().httpsCallable("getBalance");
-    var response = await requestBalance();
-    var accounts = JSON.parse(response.data);
-    return accounts;
+    if(_state.firebaseUser && _state.user){
+        var requestBalance = firebase.functions().httpsCallable("getBalance");
+        var response = await requestBalance();
+        var accounts = JSON.parse(response.data);
+        return accounts;
+    }
+    return null;
 }
 
 function logout(){
     firebase.auth().signOut().then(function(){
-        window.location.href = "/";
+        window.location.href = "main.html";
     });
 }

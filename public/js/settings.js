@@ -10,8 +10,12 @@ var SettingsWidgetFactory = {
         };
 
         settingsWidget.props = {
-            "settingsSectionSignInDisplay": "block",
-            "settingsSectionContentDisplay": "none"
+            "signInDisplay": "block",
+            "contentDisplay": "none",
+            "addKeyDisplay": "none",
+            "keyDisplay": "none",
+            "balanceDisplay": "none",
+            "paymentMethodDisplay": "none"
         };
 
         settingsWidget.onSignIn = function(){
@@ -20,33 +24,33 @@ var SettingsWidgetFactory = {
 
         settingsWidget.preRender = function(){
             if(_state.firebaseUser && _state.firebaseUser.email){
-                this.props.settingsSectionSignInDisplay = "none";
-                this.props.settingsSectionContentDisplay = "block";
+                this.props.signInDisplay = "none";
+                this.props.contentDisplay = "block";
             }
         };
 
         settingsWidget.render = function(){
             var templateString = 
             `<div class="settings-widget" style="margin:10px">
-                <div class="section-sign-in" style="display:${this.props.settingsSectionSignInDisplay}">
+                <div class="section-sign-in" style="display:${this.props.signInDisplay}">
                     <button class="btn btn-primary" attach="onSignIn">Sign In</button>
                 </div>
-                <div id="settingsSectionContent" style="display:${this.props.settingsSectionContentDisplay}">
-                    <h6>${_state.firebaseUser.email}</h6>
+                <div id="settingsSectionContent" style="display:${this.props.contentDisplay}">
+                    <h6><span></span><span class="spinner-border spinner-border-sm"></span></h6>
                     <div>
                         API-Key
                         <div style="margin-left:10px">
-                            <div><button class="btn btn-primary">Add Key</button></div>
-                            <div><span><span class="spinner-border spinner-border-sm"></span></span><button class="btn btn-danger">[RM]</button></div>
+                            <div style="display:${this.props.addKeyDisplay}"><button class="btn btn-primary">Add Key</button></div>
+                            <div style="display:${this.props.keyDisplay}"><span><span class="spinner-border spinner-border-sm"></span></span><button class="btn btn-danger">[RM]</button></div>
                         </div>
                     </div>
-                    <div>
+                    <div style="display:${this.props.balanceDisplay}">
                         Balance
                         <div style="margin-left:10px">
                             <span><span class="spinner-border spinner-border-sm"></span></span>
                         </div>
                     </div>
-                    <div>
+                    <div style="display:${this.props.paymentMethodDisplay}">
                         Payment Method
                         <div style="margin-left:10px">
                             <span><span class="spinner-border spinner-border-sm"></span></span>

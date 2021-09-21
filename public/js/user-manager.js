@@ -1,10 +1,12 @@
 var UserManager = {
+    RESPONSE_USER_CREATED: "User created!",
 
     createUser: function(firebaseUser){
+        var self = this;
         var userData = {"email":firebaseUser.email, "key":"", "secret":"", "passphrase":""};
         var collection = firebase.firestore().collection("users");
         return collection.doc(firebaseUser.uid).set(userData).then(function(){
-            return "User created!";
+            return self.RESPONSE_USER_CREATED;
         });
     },
 
