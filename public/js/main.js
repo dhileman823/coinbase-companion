@@ -22,6 +22,7 @@ function onPageLoad(firebaseUser){
         UserManager.getUser(firebaseUser.uid).then(function(userDoc){
             if(userDoc.exists){
                 var user = userDoc.data();
+                user.key = shortenKey(user.key);
                 console.log(user.email);
                 _state.user = user;
                 settingsWidget.reload();
@@ -32,6 +33,17 @@ function onPageLoad(firebaseUser){
             }
         });
     }
+}
+
+function shortenKey(key){
+    var newKey = "";
+    if(key.length > 13){
+        newKey = key.substring(0,5)+"..."+key.substring(key.length-5,key.length);
+    }
+    else{
+        newKey = key;
+    }
+    return newKey;
 }
 
 function initNewUser(){
@@ -76,8 +88,16 @@ function loadCoinbaseData(){
 async function getBalance(){
     if(_state.firebaseUser && _state.user && _state.user.key.length > 0){
         var requestBalance = firebase.functions().httpsCallable("getBalance");
-        var response = await requestBalance();
-        var accounts = JSON.parse(response.data);
+        var accounts;
+        try{
+            var response = await requestBalance();
+            accounts = JSON.parse(response.data);
+        }
+        catch(e){
+            console.log(e);
+            accounts = e;
+        }
+        
         return accounts;
     }
     return null;
@@ -86,8 +106,15 @@ async function getBalance(){
 async function getPaymentMethod(){
     if(_state.firebaseUser && _state.user && _state.user.key.length > 0){
         var requestPaymentMethods = firebase.functions().httpsCallable("getPaymentMethods");
-        var response = await requestPaymentMethods();
-        var methods = JSON.parse(response.data);
+        var methods;
+        try{
+            var response = await requestPaymentMethods();
+            methods = JSON.parse(response.data);
+        }
+        catch(e){
+            console.error(e);
+            methods = e;
+        }
         return methods;
     }
     return null;
