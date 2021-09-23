@@ -15,7 +15,11 @@ function onPageLoad(firebaseUser){
     var settingsWidget = SettingsWidgetFactory.newSettingsWidget();
     settingsWidget.placeAt(this.document.getElementById("panelSettings"));
     _state.widgets.settingsWidget = settingsWidget;
-    //create order widget
+
+    //create jobs widget
+    var jobsWidget = JobsWidgetFactory.newJobsWidget();
+    jobsWidget.placeAt(this.document.getElementById("panelJobs"));
+    _state.widgets.jobsWidget = jobsWidget;
 
     //get user and jobs objects
     if(firebaseUser){
@@ -42,6 +46,10 @@ function initNewUser(){
             window.location.href = "main.html";
         }
     });
+}
+
+function goToSettings(){
+    $("#settings-tab").tab("show");
 }
 
 function loadCoinbaseData(){

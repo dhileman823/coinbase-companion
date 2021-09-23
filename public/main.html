@@ -14,6 +14,7 @@
 
     <script defer src="js/user-manager.js"></script>
     <script src="js/settings.js"></script>
+    <script src="js/jobs.js"></script>
     <script src="js/main.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js" crossorigin="anonymous"></script>
@@ -44,13 +45,13 @@
 
     <ul class="nav nav-tabs justify-content-center" id="myTab" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false"><i class="bi-graph-up"></i> Markets</button>
+            <button class="nav-link active" id="markets-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false"><i class="bi-graph-up"></i> Markets</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true"><i class="bi-arrow-repeat"></i> Order</button>
+            <button class="nav-link" id="jobs-tab" data-bs-toggle="tab" data-bs-target="#panelJobs" type="button" role="tab" aria-controls="home" aria-selected="true"><i class="bi-arrow-repeat"></i> Orders</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#panelSettings" type="button" role="tab" aria-controls="contact" aria-selected="false"><i class="bi-gear"></i> Settings</button>
+            <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#panelSettings" type="button" role="tab" aria-controls="contact" aria-selected="false"><i class="bi-person"></i> Settings</button>
         </li>
     </ul>
     <div class="tab-content" id="myTabContent">
@@ -115,8 +116,7 @@
                 <!-- TradingView Widget END -->
             </div><!-- TradingView wrapper div END -->
         </div>
-        <div class="tab-pane fade" id="home" role="tabpanel" aria-labelledby="home-tab">
-            Order panel
+        <div class="tab-pane fade" id="panelJobs" role="tabpanel" aria-labelledby="home-tab">
         </div>
         <div class="tab-pane fade" id="panelSettings" role="tabpanel" aria-labelledby="contact-tab">
         </div>
