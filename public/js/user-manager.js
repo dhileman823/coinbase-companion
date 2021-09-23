@@ -1,9 +1,11 @@
 var UserManager = {
     RESPONSE_USER_CREATED: "User created!",
+    RESPONSE_KEY_REMOVED: "User key removed!",
+    RESPONSE_JOB_DELETED: "Job deleted!",
 
     createUser: function(firebaseUser){
         var self = this;
-        var userData = {"email":firebaseUser.email, "key":"", "secret":"", "passphrase":""};
+        var userData = {"email":firebaseUser.email, "key":""};
         var collection = firebase.firestore().collection("users");
         return collection.doc(firebaseUser.uid).set(userData).then(function(){
             return self.RESPONSE_USER_CREATED;
@@ -35,16 +37,24 @@ var UserManager = {
     },
 
     addUserKey: function(userId, key, secret, passphrase){
-        var collection = firebase.firestore().collection("users");
-        return collection.doc(userId).update({"key":key, "secret":secret, "passphrase":passphrase}).then(function(){
-            return "User key added!";
+        var collection = firebase.firestore().collection("users/"+userId+"/safe");
+        var safeData = {"key":key, "passphrase":passphrase, "secret":secret};
+        return collection.add(safeData).then(function(safeDoc){
+            var collection2 = firebase.firestore().collection("users");
+            return collection2.doc(userId).update({"key":safeDoc.id}).then(function(){
+                return safeDoc.id;
+            });
         });
     },
 
-    removeUserKey: function(userId){
+    removeUserKey: function(userId, safeId){
+        var self = this;
         var collection = firebase.firestore().collection("users");
-        return collection.doc(userId).update({"key":"", "secret":"", "passphrase":""}).then(function(){
-            return "User key removed!";
+        return collection.doc(userId).update({"key":""}).then(function(){
+            var collection2 = firebase.firestore().collection("users/"+userId+"/safe");
+            return collection2.doc(safeId).delete().then(function(){
+                return self.RESPONSE_KEY_REMOVED;
+            });
         });
     },
 
@@ -56,9 +66,10 @@ var UserManager = {
     },
     
     deleteJob: function(userId, jobId){
+        var self = this;
         collection = firebase.firestore().collection("users/"+userId+"/jobs");
         return collection.doc(jobId).delete().then(function(){
-            return "document deleted";
+            return self.RESPONSE_JOB_DELETED;
         });
     }
 }

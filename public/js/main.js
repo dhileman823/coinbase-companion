@@ -5,7 +5,7 @@ var _state = {
     "cbBalance":null,
     "cbPaymentMethodId":null,
     "cbPaymentMethodName":null,
-    "widgets":[],
+    "widgets":{},
 };
 
 function onPageLoad(firebaseUser){
@@ -14,7 +14,7 @@ function onPageLoad(firebaseUser){
     //create settings widget
     var settingsWidget = SettingsWidgetFactory.newSettingsWidget();
     settingsWidget.placeAt(this.document.getElementById("panelSettings"));
-    _state.widgets.push(settingsWidget);
+    _state.widgets.settingsWidget = settingsWidget;
     //create order widget
 
     //get user and jobs objects
@@ -22,8 +22,7 @@ function onPageLoad(firebaseUser){
         UserManager.getUser(firebaseUser.uid).then(function(userDoc){
             if(userDoc.exists){
                 var user = userDoc.data();
-                user.key = shortenKey(user.key);
-                console.log(user.email);
+                console.log(user);
                 _state.user = user;
                 settingsWidget.reload();
                 loadCoinbaseData();
@@ -33,17 +32,6 @@ function onPageLoad(firebaseUser){
             }
         });
     }
-}
-
-function shortenKey(key){
-    var newKey = "";
-    if(key.length > 13){
-        newKey = key.substring(0,5)+"..."+key.substring(key.length-5,key.length);
-    }
-    else{
-        newKey = key;
-    }
-    return newKey;
 }
 
 function initNewUser(){
@@ -65,8 +53,12 @@ function loadCoinbaseData(){
                 });
                 if(result){
                     _state.cbBalance = result.available;
-                    _state.widgets[0].reload();
+                    _state.widgets.settingsWidget.reload();
                 }
+            }
+            else{
+                _state.cbBalance = r;
+                _state.widgets.settingsWidget.reload();
             }
         });
         getPaymentMethod().then(function(r){
@@ -76,25 +68,39 @@ function loadCoinbaseData(){
                     if(pm.currency === "USD" && pm.primary_buy){
                         _state.cbPaymentMethodId = pm.id;
                         _state.cbPaymentMethodName = pm.name;
-                        _state.widgets[0].reload();
+                        _state.widgets.settingsWidget.reload();
                         break;
                     }
                 }
+            }
+            else{
+                _state.cbPaymentMethodName = r;
+                _state.widgets.settingsWidget.reload();
             }
         });
     }
 }
 
 async function getBalance(){
+    console.log("getBalance");
     if(_state.firebaseUser && _state.user && _state.user.key.length > 0){
         var requestBalance = firebase.functions().httpsCallable("getBalance");
         var accounts;
         try{
             var response = await requestBalance();
-            accounts = JSON.parse(response.data);
+            if(response && response.data){
+                var data = JSON.parse(response.data);
+                if(data.message){
+                    console.error(data.message);
+                    accounts = data.message;
+                }
+                if(Array.isArray(data)){
+                    accounts = data;
+                }
+            }
         }
         catch(e){
-            console.log(e);
+            console.error(e);
             accounts = e;
         }
         
@@ -109,7 +115,16 @@ async function getPaymentMethod(){
         var methods;
         try{
             var response = await requestPaymentMethods();
-            methods = JSON.parse(response.data);
+            if(response && response.data){
+                var data = JSON.parse(response.data);
+                if(data.message){
+                    console.error(data.message);
+                    methods = data.message;
+                }
+                if(Array.isArray(data)){
+                    methods = data;
+                }
+            }
         }
         catch(e){
             console.error(e);

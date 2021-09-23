@@ -10,13 +10,17 @@ exports.getBalance = functions.https.onCall((data, context) => {
     return userCollection.doc(uid).get().then(userDoc => {
         var user = userDoc.data();
         functions.logger.log("getBalance => got user");
-        if(userHasValidKey(user)){
-            functions.logger.log("getBalance => user has valid key");
-            return coinbaseBalanceRequest(user);
-        }
-        else{
-            return {"message":"User does not have a valid key"};
-        }
+        let safeCollection = db.collection("users/"+uid+"/safe")
+        return safeCollection.doc(user.key).get().then(safeDoc => {
+            var safe = safeDoc.data();
+            if(userHasValidKey(safe)){
+                functions.logger.log("getBalance => user has valid key");
+                return coinbaseBalanceRequest(safe);
+            }
+            else{
+                return {"data":"{\"message\":\"User does not have a valid key\"}"};
+            }
+        });
     });
 });
 
@@ -26,37 +30,41 @@ exports.getPaymentMethods = functions.https.onCall((data, context) => {
     return userCollection.doc(uid).get().then(userDoc => {
         var user = userDoc.data();
         functions.logger.log("getPaymentMethods => got user");
-        if(userHasValidKey(user)){
-            functions.logger.log("getPaymentMethods => user has valid key");
-            return coinbasePaymentMethodsRequest(user);
-        }
-        else{
-            return {"message":"User does not have a valid key"};
-        }
+        let safeCollection = db.collection("users/"+uid+"/safe")
+        return safeCollection.doc(user.key).get().then(safeDoc => {
+            var safe = safeDoc.data();
+            if(userHasValidKey(safe)){
+                functions.logger.log("getPaymentMethods => user has valid key");
+                return coinbasePaymentMethodsRequest(safe);
+            }
+            else{
+                return {"data":"{\"message\":\"User does not have a valid key\"}"};
+            }
+        });
     });
 });
 
-function userHasValidKey(user){
-    if(user && user.key && user.key.length>0 && user.secret && user.secret.length>0 && user.passphrase && user.passphrase.length>0){
+function userHasValidKey(safe){
+    if(safe && safe.key && safe.key.length>0 && safe.secret && safe.secret.length>0 && safe.passphrase && safe.passphrase.length>0){
         return true;
     }
     return false;
 }
 
-function coinbaseBalanceRequest(user){
+function coinbaseBalanceRequest(safe){
     functions.logger.log("getBalance => begin coinbaseBalanceRequest");
     const coinbaseApiUrl = "https://api.pro.coinbase.com";
     const accountsUrl = coinbaseApiUrl + "/accounts";
 
     var timestamp = Date.now() / 1000;
-    var signature = getRequestSignature(user, "/accounts", timestamp);
+    var signature = getRequestSignature(safe, "/accounts", timestamp);
     var requestOptions = {
         "url": accountsUrl,
         "headers": {
-            "CB-ACCESS-KEY": user.key,
+            "CB-ACCESS-KEY": safe.key,
             "CB-ACCESS-SIGN": signature,
             "CB-ACCESS-TIMESTAMP": timestamp,
-            "CB-ACCESS-PASSPHRASE": user.passphrase,
+            "CB-ACCESS-PASSPHRASE": safe.passphrase,
             "User-Agent": "Firebase-function"
         }
     };
@@ -69,20 +77,20 @@ function coinbaseBalanceRequest(user){
     });
 }
 
-function coinbasePaymentMethodsRequest(user){
+function coinbasePaymentMethodsRequest(safe){
     functions.logger.log("getPaymentMethods => begin coinbasePaymentMethodsRequest");
     const coinbaseApiUrl = "https://api.pro.coinbase.com";
     const pmUrl = coinbaseApiUrl + "/payment-methods";
 
     var timestamp = Date.now() / 1000;
-    var signature = getRequestSignature(user, "/payment-methods", timestamp);
+    var signature = getRequestSignature(safe, "/payment-methods", timestamp);
     var requestOptions = {
         "url": pmUrl,
         "headers": {
-            "CB-ACCESS-KEY": user.key,
+            "CB-ACCESS-KEY": safe.key,
             "CB-ACCESS-SIGN": signature,
             "CB-ACCESS-TIMESTAMP": timestamp,
-            "CB-ACCESS-PASSPHRASE": user.passphrase,
+            "CB-ACCESS-PASSPHRASE": safe.passphrase,
             "User-Agent": "Firebase-function"
         }
     };
@@ -95,9 +103,9 @@ function coinbasePaymentMethodsRequest(user){
     });
 }
 
-function getRequestSignature(user, path, timestamp){
+function getRequestSignature(safe, path, timestamp){
     var crypto = require('crypto');
-    var secret = user.secret;
+    var secret = safe.secret;
     var requestPath = path;
     var body = ""; //no body for this GET request
     var method = 'GET';

@@ -29,8 +29,6 @@ var SettingsWidgetFactory = {
         };
 
         settingsWidget.preRender = function(){
-            console.log("preRender");
-            console.log(_state);
             if(_state.firebaseUser && _state.firebaseUser.email){
                 this.props.signInDisplay = "none";
                 this.props.contentDisplay = "block";
@@ -39,6 +37,7 @@ var SettingsWidgetFactory = {
                 this.props.email = _state.firebaseUser.email;
                 this.props.keySectionDisplay = "block";
                 if(_state.user.key && _state.user.key.length > 0){
+                    this.props.addKeyButtonDisplay = "none";
                     this.props.keyDisplay = "block";
                     this.props.apiKey = _state.user.key;
                     this.props.balanceDisplay = "block";
@@ -46,6 +45,9 @@ var SettingsWidgetFactory = {
                 }
                 else{
                     this.props.addKeyButtonDisplay = "block";
+                    this.props.keyDisplay = "none";
+                    this.props.balanceDisplay = "none";
+                    this.props.paymentMethodDisplay = "none";
                 }
             }
             if(_state.cbBalance){
@@ -64,28 +66,71 @@ var SettingsWidgetFactory = {
                 </div>
                 <div id="settingsSectionContent" style="display:${this.props.contentDisplay}">
                     <h6><span>${this.props.email}</span></h6>
-                    <div style="display:${this.props.keySectionDisplay}">
-                        API-Key
+                    <div style="margin-top:20px;display:${this.props.keySectionDisplay}">
+                        <h6>Coinbase Pro API-Key</h6>
                         <div style="margin-left:10px">
-                            <div style="display:${this.props.addKeyButtonDisplay}"><button class="btn btn-primary">Add Key</button></div>
-                            <div style="display:${this.props.keyDisplay}"><span>${this.props.apiKey}</span><button class="btn btn-danger">[RM]</button></div>
+                            <div style="display:${this.props.addKeyButtonDisplay}"><button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addKeyModal">Add Key</button></div>
+                            <div style="display:${this.props.keyDisplay}"><span style="font-style:italic">${this.props.apiKey}</span> <button class="btn btn-danger btn-sm" attach="handleRemoveKeyClick"><i class='bi-trash-fill'></i></button></div>
                         </div>
                     </div>
-                    <div style="display:${this.props.balanceDisplay}">
-                        Balance
+                    <div style="margin-top:10px;display:${this.props.balanceDisplay}">
+                        <h6>Available Balance</h6>
                         <div style="margin-left:10px">
-                            <span>${this.props.balance}</span>
+                            <span style="font-style:italic">${this.props.balance}</span>
                         </div>
                     </div>
                     <div style="margin-top:10px;display:${this.props.paymentMethodDisplay}">
-                        Payment Method
+                    <h6>Payment Method</h6>
                         <div style="margin-left:10px">
-                            <span>${this.props.paymentMethod}</span>
+                            <span style="font-style:italic">${this.props.paymentMethod}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="addKeyModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Add API-Key</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <input id="txtKey" type="text" class="form-control" placeholder="Key"/>
+                            <input id="txtPassphrase" type="text" class="form-control" placeholder="Passphrase"/>
+                            <input id="txtSecret" type="password" class="form-control" placeholder="Secret"/>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" attach="handleAddKeyClick">Save</button>
+                        </div>
                         </div>
                     </div>
                 </div>
             </div>`;
             this.domNode.innerHTML = templateString;
+        };
+
+        settingsWidget.handleAddKeyClick = function(){
+            var newKey = document.getElementById("txtKey").value;
+            var newSecret = document.getElementById("txtSecret").value;
+            var newPassphrase = document.getElementById("txtPassphrase").value;
+            UserManager.addUserKey(_state.firebaseUser.uid, newKey, newSecret, newPassphrase).then(function(response){
+                $("#addKeyModal").modal("hide");
+                _state.user.key = response;
+                loadCoinbaseData();
+            });
+        };
+
+        settingsWidget.handleRemoveKeyClick = function(){
+            var affirm = confirm("Are you sure you want to remove your api key?");
+            if(affirm){
+                UserManager.removeUserKey(_state.firebaseUser.uid, _state.user.key).then(function(response){
+                    if(response == UserManager.RESPONSE_KEY_REMOVED){
+                        _state.user.key = "";
+                        _state.widgets.settingsWidget.reload();
+                    }
+                });
+            }
         };
 
         settingsWidget.attachEvents = function(){
