@@ -61,11 +61,13 @@ function loadCoinbaseData(){
                 });
                 if(result){
                     _state.cbBalance = result.available;
+                    _state.widgets.jobsWidget.reload();
                     _state.widgets.settingsWidget.reload();
                 }
             }
             else{
                 _state.cbBalance = r;
+                _state.widgets.jobsWidget.reload();
                 _state.widgets.settingsWidget.reload();
             }
         });
@@ -76,6 +78,7 @@ function loadCoinbaseData(){
                     if(pm.currency === "USD" && pm.primary_buy){
                         _state.cbPaymentMethodId = pm.id;
                         _state.cbPaymentMethodName = pm.name;
+                        _state.widgets.jobsWidget.reload();
                         _state.widgets.settingsWidget.reload();
                         break;
                     }
@@ -83,6 +86,7 @@ function loadCoinbaseData(){
             }
             else{
                 _state.cbPaymentMethodName = r;
+                _state.widgets.jobsWidget.reload();
                 _state.widgets.settingsWidget.reload();
             }
         });
