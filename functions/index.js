@@ -120,7 +120,7 @@ function getRequestSignature(safe, path, timestamp){
     return hmac.update(what).digest('base64');
 }
 
-exports.processJobs = functions.pubsub.schedule('every day 12:00').timeZone('Etc/UTC').onRun(async context => {
+exports.processJobs = functions.pubsub.schedule('every day 12:01').timeZone('Etc/UTC').onRun(async context => {
     functions.logger.log("processJobs => begin");
     let userCollection = db.collection("users");
     functions.logger.log("processJobs => get users...");
@@ -138,6 +138,7 @@ exports.processJobs = functions.pubsub.schedule('every day 12:00').timeZone('Etc
 
 async function processUserJobs(userDoc){
     let user = userDoc.data();
+    user.id = userDoc.id;
     user.jobs = [];
     let jobDocs = await userDoc.ref.collection("jobs").get();
     jobDocs.forEach(jobDoc => {
@@ -145,7 +146,17 @@ async function processUserJobs(userDoc){
         functions.logger.log("processJobs => got job", job);
         user.jobs.push(job);
     });
-    processUserOrders(user);
+    let safeCollection = db.collection("users/"+uid+"/safe")
+    let safeDoc = await safeCollection.doc(user.key).get();
+    let safe = safeDoc.data();
+    if(userHasValidKey(safe)){
+        functions.logger.log("User has valid key; continue processing user orders");
+        user.safe = safe;
+        processUserOrders(user);
+    }
+    else{
+        functions.logger.log("User does not have valid key.");
+    }
 }
 
 function processUserOrders(user){
@@ -161,6 +172,14 @@ function processUserOrders(user){
                 functions.logger.log("now " + now.getTime() + " >< next " + next.getTime());
                 var timeForPurchase = now >= next;
                 functions.logger.log("timeForPurchase? " + timeForPurchase);
+                if(timeForPurchase){
+                    //submit the order
+
+                    //enter a transaction record
+                    let txCollection = db.collection("users/"+uid+"/transactions");
+                    let tx = {"type":job.type, "asset":job.asset, "amount":job.amount, "created": now};
+                    txCollection.add(tx);
+                }
             }
         }
         else{
