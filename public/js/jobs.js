@@ -121,12 +121,17 @@ var JobsWidgetFactory = {
             }
 
             var txDiv = document.querySelector("#txDiv");
-            if(this.props.transactions.length > 0)
-                txDiv.innerHTML = "";
-            else
-                txDiv.innerHTML = "None.";
-            for(var i=0; i<this.props.transactions.length; i++){
-                var tx = this.props.transactions[i];
+            txDiv.innerHTML = "None.";
+            if(this.props.transactions.length > 0){
+                var table = "<table class='table'><thead><tr><th>Type</th><th>Asset</th><th>$Amount</th><th>Date</th></tr></thead><tbody>";
+                for(var i=0; i<this.props.transactions.length; i++){
+                    var tx = this.props.transactions[i];
+                    var html = "<tr><td>"+tx.type+"</td><td>"+tx.asset+"</td><td>"+tx.amount+"</td><td>"+tx.created.toDate().toLocaleDateString()+"</td></tr>";
+                    table += html;
+                }
+                table += "</tbody></table>";
+                txDiv.innerHTML = table;
+            }
         };
 
         jobsWidget.attachEvents = function(){

@@ -10,5 +10,8 @@ service cloud.firestore {
     match /users/{userId}/safe/{document=**} {
       allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
     }
+    match /users/{userId}/transactions/{document=**} {
+      allow read, create, update, delete: if request.auth != null && request.auth.uid == userId;
+    }
   }
 }

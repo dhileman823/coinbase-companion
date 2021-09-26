@@ -32,7 +32,7 @@ var UserManager = {
     },
 
     getUserTransactions: function(userDoc){
-        return userDoc.ref.collection("transactions").orderBy("created").get().then(function(querySnapshot){
+        return userDoc.ref.collection("transactions").orderBy("created", "desc").get().then(function(querySnapshot){
             let txs = [];
             querySnapshot.forEach(function(doc){
                 let tx = doc.data();
