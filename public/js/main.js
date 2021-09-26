@@ -2,6 +2,7 @@ var _state = {
     "firebaseUser":null,
     "user":null,
     "jobs":[],
+    "transactions":[],
     "cbBalance":null,
     "cbPaymentMethodId":null,
     "cbPaymentMethodName":null,
@@ -28,7 +29,11 @@ function onPageLoad(firebaseUser){
                 var user = userDoc.data();
                 console.log(user);
                 _state.user = user;
+                _state.userDoc = userDoc;
+                jobsWidget.reload();
                 settingsWidget.reload();
+                loadJobsData();
+                loadTransactionsData();
                 loadCoinbaseData();
             }
             else{
@@ -50,6 +55,26 @@ function initNewUser(){
 
 function goToSettings(){
     $("#settings-tab").tab("show");
+}
+
+function loadJobsData(){
+    UserManager.getUserJobs(_state.userDoc).then(function(jobs){
+        _state.jobs = jobs;
+        _state.widgets.jobsWidget.reload();
+    })
+    .catch(function(err){
+        console.error(err);    
+    });
+}
+
+function loadTransactionsData(){
+    UserManager.getUserTransactions(_state.userDoc).then(function(txs){
+        _state.transactions = txs;
+        _state.widgets.jobsWidget.reload();
+    })
+    .catch(function(err){
+        console.error(err);    
+    });
 }
 
 function loadCoinbaseData(){
@@ -151,4 +176,127 @@ function logout(){
     firebase.auth().signOut().then(function(){
         window.location.href = "main.html";
     });
+}
+
+function addRecurDeposit(){
+    var job = {};
+    job.asset = "USD";
+    job.paymentMethod = document.getElementById("selectPaymentMethod").value;
+    job.amount = parseFloat(document.getElementById("txtAmountDeposit").value);
+    job.recurDays = parseInt(document.getElementById("txtRecurDeposit").value);
+    job.created = new Date();
+    job.nextPurchaseDate = addDays(job.created, job.recurDays);
+    job.nextPurchaseDate.setUTCHours(12,0,0,0);
+    job.type = "deposit";
+
+    if(job.amount < 1){
+        alert("The amount must be at least 1");
+        return;
+    }
+    if(job.recurDays < 1){
+        alert("The number of days must be at least 1");
+        return;
+    }
+    UserManager.createJob(_state.firebaseUser.uid, job).then(function(response){
+        $("#addDepositModal").modal("hide");
+        loadJobsData();
+    });
+}
+
+function addRecurOrder(){
+    var job = {};
+    job.asset = document.getElementById("selectAsset").value;
+    job.amount = parseFloat(document.getElementById("txtAmount").value);
+    job.recurDays = parseInt(document.getElementById("txtRecur").value);
+    job.created = new Date();
+    job.nextPurchaseDate = addDays(job.created, job.recurDays);
+    job.nextPurchaseDate.setUTCHours(12,0,0,1);
+    job.type = "order";
+
+    if(job.amount < 1){
+        alert("The amount must be at least 1");
+        return;
+    }
+    if(job.recurDays < 1){
+        alert("The number of days must be at least 1");
+        return;
+    }
+    UserManager.createJob(_state.firebaseUser.uid, job).then(function(response){
+        $("#addPurchaseModal").modal("hide");
+        loadJobsData();
+    });
+}
+
+function deleteRecurDeposit(){
+    var affirm = confirm("Are you sure you want to delete this recurring deposit?");
+    if(affirm){
+        var jobId = document.getElementById("viewDepositJobId").value;
+        UserManager.deleteJob(_state.firebaseUser.uid, jobId).then(function(response){
+            $("#viewDepositModal").modal("hide");
+            loadJobsData();
+        });
+    }
+}
+
+function deleteRecurOrder(){
+    var affirm = confirm("Are you sure you want to delete this recurring purchase?");
+    if(affirm){
+        var jobId = document.getElementById("viewJobId").value;
+        UserManager.deleteJob(_state.firebaseUser.uid, jobId).then(function(response){
+            $("#viewPurchaseModal").modal("hide");
+            loadJobsData();
+        });
+    }
+}
+
+function loadViewModal(jobId){
+    document.getElementById("alertFundsWarning").style.display = "none";
+    UserManager.getUserJob(_state.firebaseUser.uid, jobId).then(function(jobDoc){
+        var job = jobDoc.data();
+        document.getElementById("viewJobId").value = jobId;
+        document.getElementById("spanViewAsset").innerHTML = job.asset;
+        document.getElementById("spanViewAmount").innerHTML = job.amount;
+        document.getElementById("spanViewRecur").innerHTML = job.recurDays;
+        document.getElementById("spanViewCreated").innerHTML = job.created.toDate().toUTCString();
+        document.getElementById("spanViewNext").innerHTML = job.nextPurchaseDate.toDate().toUTCString();
+        if(!_state.cbBalance){
+            document.getElementById("alertFundsWarning").style.display = "block";
+            document.getElementById("alertFundsWarning").innerHTML = "Unable to connect to Coinbase Pro. Make sure you have added a valid API-Key.";
+        }
+        else if(_state.balance && _state.balance < job.amount){
+            document.getElementById("alertFundsWarning").style.display = "block";
+            document.getElementById("alertFundsWarning").innerHTML = "Insufficent funds. Deposit more USD into your Coinbase Pro account before next purchase date.";
+        }
+    });
+    $("#viewPurchaseModal").modal("show");
+}
+
+function loadDepositViewModal(jobId){
+    document.getElementById("alertDepositWarning").style.display = "none";
+    UserManager.getUserJob(_state.firebaseUser.uid, jobId).then(function(jobDoc){
+        var job = jobDoc.data();
+        document.getElementById("viewDepositJobId").value = jobId;
+        document.getElementById("spanViewPaymentMethod").innerHTML = job.paymentMethod;
+        document.getElementById("spanViewDepositAmount").innerHTML = job.amount;
+        document.getElementById("spanViewDepositRecur").innerHTML = job.recurDays;
+        document.getElementById("spanViewDepositCreated").innerHTML = job.created.toDate().toUTCString();
+        document.getElementById("spanViewDepositNext").innerHTML = job.nextPurchaseDate.toDate().toUTCString();
+        if(!_state.cbBalance){
+            document.getElementById("alertDepositWarning").style.display = "block";
+            document.getElementById("alertDepositWarning").innerHTML = "Unable to connect to Coinbase Pro. Make sure you have added a valid API-Key.";
+        }
+        if(_state.cbPaymentMethodId == job.paymentMethod){
+            document.getElementById("spanViewPaymentMethod").innerHTML = _state.cbPaymentMethodName;
+        }
+        else{
+            document.getElementById("spanViewPaymentMethod").innerHTML = "Not available";
+        }
+    });
+    $("#viewDepositModal").modal("show");
+}
+
+function addDays(date, days) {
+    var result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
 }

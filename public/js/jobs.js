@@ -12,6 +12,8 @@ var JobsWidgetFactory = {
         jobsWidget.props = {
             "signInDisplay": "block",
             "contentDisplay": "none",
+            "jobs": [],
+            "transactions": []
         };
 
         jobsWidget.onSignIn = function(){
@@ -30,6 +32,12 @@ var JobsWidgetFactory = {
                 document.getElementById("selectPaymentMethod").innerHTML = "";
                 document.getElementById("selectPaymentMethod").appendChild(option);
             }
+            if(_state.jobs && _state.jobs.length > 0){
+                this.props.jobs = _state.jobs;
+            }
+            if(_state.transactions && _state.transactions.length > 0){
+                this.props.transactions = _state.transactions;
+            }
         };
 
         jobsWidget.render = function(){
@@ -41,7 +49,7 @@ var JobsWidgetFactory = {
                 <div style="display:${this.props.contentDisplay}">
                     <div class="job-section">
                         <h6>Recurring Transactions</h6>
-                        <div>None.</div>
+                        <div id="jobsDiv"></div>
                         <div class="job-buttons" style="margin-top:5px">
                             <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addDepositModal" style="width:49%">Add recurring deposit</button>
                             <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addPurchaseModal" style="width:49%;float:right">Add recurring order</button>
@@ -49,13 +57,76 @@ var JobsWidgetFactory = {
                     </div>
                     <div style="margin-top:20px">
                         <h6>Recent Transaction History</h6>
-                        <div>None.</div>
+                        <div id="txDiv"></div>
                     </div>
                 </div>
-
-
             </div>`;
             this.domNode.innerHTML = templateString;
+        };
+
+        jobsWidget.postCreate = function(){
+            var jobsDiv = document.querySelector("#jobsDiv");
+            if(this.props.jobs.length > 0)
+                jobsDiv.innerHTML = "";
+            else
+                jobsDiv.innerHTML = "None.";
+            for(var i=0; i<this.props.jobs.length; i++){
+                var job = this.props.jobs[i];
+                var tooltip = "";
+                var status = "inactive-job";
+                var jobClass = "job";
+                var action = "";
+                var onClick = "";
+                if(job.type == "deposit"){
+                    action = "Depositing";
+                    jobClass += " job-deposit";
+                    onClick = "loadDepositViewModal";
+                }
+                else{
+                    action = "Buying";
+                    jobClass += " job-order";
+                    onClick = "loadViewModal";
+                }
+                if(job.type == "deposit"){
+                    if(_state.cbPaymentMethodId && _state.cbPaymentMethodId.length > 0){
+                        status = "active-job";
+                        tooltip = status;
+                    }
+                    else {
+                        status = "inactive-job";
+                        tooltip = "No available payment methods.";
+                    }
+                }
+                else{
+                    if(_state.cbBalance && _state.cbBalance > job.amount){
+                        status = "active-job";
+                        tooltip = status;
+                    }
+                    else{
+                        status = "inactive-job";
+                        tooltip = "Insufficent funds.";
+                    }
+                }
+                var html = "<div class='{jobClass}' title='{tooltip}' onclick='{onClick}(\"{jobId}\")')'><span class='{status}'>&nbsp;</span> {action} {amount} {currency},  {nextPurchaseDate} <i class='bi-three-dots-vertical' style='float:right'></i></div>";
+                html = html.replace("{jobClass}", jobClass);
+                html = html.replace("{jobId}", job.id);
+                html = html.replace("{onClick}", onClick);
+                html = html.replace("{action}", action);
+                html = html.replace("{status}", status);
+                html = html.replace("{tooltip}", tooltip);
+                html = html.replace("{currency}", job.asset);
+                html = html.replace("{amount}", "$"+job.amount);
+                html = html.replace("{nextPurchaseDate}", job.nextPurchaseDate.toDate().toLocaleDateString());
+                jobsDiv.innerHTML += html;
+            }
+
+            var txDiv = document.querySelector("#txDiv");
+            if(this.props.transactions.length > 0)
+                txDiv.innerHTML = "";
+            else
+                txDiv.innerHTML = "None.";
+            for(var i=0; i<this.props.transactions.length; i++){
+                var tx = this.props.transactions[i];
         };
 
         jobsWidget.attachEvents = function(){
@@ -74,12 +145,14 @@ var JobsWidgetFactory = {
             this.preRender();
             this.render();
             this.attachEvents();
+            this.postCreate();
         };
 
         jobsWidget.reload = function(){
             this.preRender();
             this.render();
             this.attachEvents();
+            this.postCreate();
         };
 
         return jobsWidget;

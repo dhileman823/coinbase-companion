@@ -21,11 +21,25 @@ var UserManager = {
 
     getUserJobs: function(userDoc){
         return userDoc.ref.collection("jobs").orderBy("nextPurchaseDate").get().then(function(querySnapshot){
-            let jobDocs = [];
+            let jobs = [];
             querySnapshot.forEach(function(doc){
-                jobDocs.push(doc);
+                let job = doc.data();
+                job.id = doc.id;
+                jobs.push(job);
             });
-            return jobDocs;
+            return jobs;
+        });
+    },
+
+    getUserTransactions: function(userDoc){
+        return userDoc.ref.collection("transactions").orderBy("created").get().then(function(querySnapshot){
+            let txs = [];
+            querySnapshot.forEach(function(doc){
+                let tx = doc.data();
+                tx.id = doc.id;
+                txs.push(tx);
+            });
+            return txs;
         });
     },
 

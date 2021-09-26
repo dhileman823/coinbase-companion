@@ -1,0 +1,27 @@
+.active-job {
+  background-color: green;
+  color: green;
+  border-radius:5px;
+  font-family: 'Courier New', Courier, monospace;
+}
+.inactive-job {
+  background-color: red;
+  color: red;
+  border-radius:5px;
+  font-family: 'Courier New', Courier, monospace;
+}
+.job {
+  padding:5px;
+  margin-top:5px;
+  cursor:pointer;
+  box-shadow: 0 2px 1px -1px rgba(0,0,0,.2),0 1px 1px 0 rgba(0,0,0,.14),0 1px 3px 0 rgba(0,0,0,.12);
+}
+.job-order {
+  background-color: lightblue;
+}
+.job-deposit {
+  background-color: lightgreen;
+}
+.bold {
+  font-weight: bold;
+}
