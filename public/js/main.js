@@ -27,7 +27,6 @@ function onPageLoad(firebaseUser){
         UserManager.getUser(firebaseUser.uid).then(function(userDoc){
             if(userDoc.exists){
                 var user = userDoc.data();
-                console.log(user);
                 _state.user = user;
                 _state.userDoc = userDoc;
                 jobsWidget.reload();
@@ -44,11 +43,10 @@ function onPageLoad(firebaseUser){
 }
 
 function initNewUser(){
-    console.log("Init first time user");
+    console.log("First time user");
     UserManager.createUser(firebaseUser).then(function(response){
-        console.log(response);
         if(response == UserManager.RESPONSE_USER_CREATED){
-            window.location.href = "main.html";
+            window.location.href = "/";
         }
     });
 }
@@ -119,7 +117,6 @@ function loadCoinbaseData(){
 }
 
 async function getBalance(){
-    console.log("getBalance");
     if(_state.firebaseUser && _state.user && _state.user.key.length > 0){
         var requestBalance = firebase.functions().httpsCallable("getBalance");
         var accounts;
@@ -174,7 +171,7 @@ async function getPaymentMethod(){
 
 function logout(){
     firebase.auth().signOut().then(function(){
-        window.location.href = "main.html";
+        window.location.href = "/";
     });
 }
 

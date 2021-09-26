@@ -3,111 +3,351 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Welcome to Firebase Hosting</title>
+    <title>Coinbase Companion</title>
 
     <script src="/__/firebase/8.8.1/firebase-app.js"></script>
     <script src="/__/firebase/8.8.1/firebase-auth.js"></script>
     <script src="/__/firebase/8.8.1/firebase-firestore.js"></script>
     <script src="/__/firebase/8.8.1/firebase-functions.js"></script>
     <script src="/__/firebase/init.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
-    <script src="https://www.gstatic.com/firebasejs/ui/4.5.0/firebase-ui-auth.js"></script>
-    <link
-      type="text/css"
-      rel="stylesheet"
-      href="https://www.gstatic.com/firebasejs/ui/4.5.0/firebase-ui-auth.css"
-    />
+    <script defer src="js/user-manager.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/jobs.js"></script>
+    <script src="js/main.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+
+    <script src="https://www.gstatic.com/firebasejs/ui/4.5.0/firebase-ui-auth.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.5.0/firebase-ui-auth.css"/>
+
+    <link type="text/css" rel="stylesheet" href="css/settings.css"/>
+    <link type="text/css" rel="stylesheet" href="css/jobs.css"/>
+
+    <style>
+      .mdl-shadow--2dp {
+        box-shadow: none;
+      }
+    </style>
+
   </head>
   <body>
+
     <nav class="navbar navbar-dark bg-dark">
-      <div class="container-fluid">
-          <span class="navbar-brand mb-0 h1">Coinbase Companion</span>
-      </div>
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">Coinbase Companion</span>
+            <span class="navbar-text" id="btnLogout" onclick="logout()" style="cursor:pointer;display:none">Logout</span>
+        </div>
     </nav>
-    <div style="display:none">
-      <div id="message">
-        <h2>Welcome</h2>
-        <h1>Firebase Hosting Setup Complete</h1>
-        <p>You're seeing this because you've successfully setup Firebase Hosting. Now it's time to go build something extraordinary!</p>
-        <a target="_blank" href="https://firebase.google.com/docs/hosting/">Open Hosting Documentation</a>
-      </div>
-      <p id="load">Firebase SDK Loading&hellip;</p>
+
+    <ul class="nav nav-tabs justify-content-center" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="markets-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false"><i class="bi-graph-up"></i> Markets</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="jobs-tab" data-bs-toggle="tab" data-bs-target="#panelJobs" type="button" role="tab" aria-controls="home" aria-selected="true"><i class="bi-arrow-repeat"></i> Orders</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#panelSettings" type="button" role="tab" aria-controls="contact" aria-selected="false"><i class="bi-person"></i> Settings</button>
+        </li>
+    </ul>
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+            <h6 style="margin-top:10px;margin-left:5px;">Cryptocurrency</h6>
+            <div style="height:540px;margin-top:10px"><!-- TradingView wrapper div BEGIN -->
+                <!-- TradingView Widget BEGIN -->
+                <div class="tradingview-widget-container">
+                  <div class="tradingview-widget-container__widget"></div>
+                  <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com" rel="noopener" target="_blank"><span class="blue-text">Digital Currency</span></a> by TradingView</div>
+                  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
+                  {
+                  "colorTheme": "light",
+                  "dateRange": "12M",
+                  "showChart": true,
+                  "locale": "en",
+                  "width": "100%",
+                  "height": "100%",
+                  "largeChartUrl": "",
+                  "isTransparent": false,
+                  "showSymbolLogo": true,
+                  "showFloatingTooltip": false,
+                  "plotLineColorGrowing": "rgba(41, 98, 255, 1)",
+                  "plotLineColorFalling": "rgba(41, 98, 255, 1)",
+                  "gridLineColor": "rgba(42, 46, 57, 0)",
+                  "scaleFontColor": "rgba(120, 123, 134, 1)",
+                  "belowLineFillColorGrowing": "rgba(41, 98, 255, 0.12)",
+                  "belowLineFillColorFalling": "rgba(41, 98, 255, 0.12)",
+                  "belowLineFillColorGrowingBottom": "rgba(41, 98, 255, 0)",
+                  "belowLineFillColorFallingBottom": "rgba(41, 98, 255, 0)",
+                  "symbolActiveColor": "rgba(41, 98, 255, 0.12)",
+                  "tabs": [
+                    {
+                      "title": "Digital Currency",
+                      "symbols": [
+                        {
+                          "s": "COINBASE:BTCUSD",
+                          "d": "Bitcoin"
+                        },
+                        {
+                          "s": "COINBASE:ETHUSD",
+                          "d": "Ethereum"
+                        },
+                        {
+                          "s": "COINBASE:ADAUSD",
+                          "d": "Cardano"
+                        },
+                        {
+                          "s": "COINBASE:SOLUSD",
+                          "d": "Solana"
+                        },
+                        {
+                          "s": "COINBASE:DOTUSD",
+                          "d": "Polkadot"
+                        }
+                      ]
+                    }
+                  ]
+                }
+                  </script>
+                </div>
+                <!-- TradingView Widget END -->
+            </div><!-- TradingView wrapper div END -->
+        </div>
+        <div class="tab-pane fade" id="panelJobs" role="tabpanel" aria-labelledby="home-tab">
+        </div>
+        <div class="tab-pane fade" id="panelSettings" role="tabpanel" aria-labelledby="contact-tab">
+        </div>
     </div>
 
-    <div style="margin-top:20px">
-      <section id="firebaseui-auth-container"></section>
-      <div id="loader"></div>
+    <div class="modal fade" id="signInModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <section id="firebaseui-auth-container"></section>
+            </div>
+          </div>
+      </div>
     </div>
 
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        const loadEl = document.querySelector('#load');
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-        // // The Firebase SDK is initialized and available here!
-        firebase.auth().onAuthStateChanged(user => {
-            if(user && user.email){
-                window.location.href = "home.html";
-            }
+        document.addEventListener('DOMContentLoaded', function() {
+          // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+          // // The Firebase SDK is initialized and available here!
+          firebase.auth().onAuthStateChanged(user => { 
+              console.log("Auth: user " + user);
+              if(user && user.email){
+                document.getElementById("btnLogout").style.display = "inline";
+                onPageLoad(user);
+              }
+              else{
+                document.getElementById("btnLogout").style.display = "none";
+                onPageLoad(null);
+              }
+          });
+          // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
+          // firebase.firestore().doc('/foo/bar').get().then(() => { });
+          // firebase.functions().httpsCallable('yourFunction')().then(() => { });
+          // firebase.messaging().requestPermission().then(() => { });
+          // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
+          // firebase.analytics(); // call to activate
+          // firebase.analytics().logEvent('tutorial_completed');
+          // firebase.performance(); // call to activate
+          //
+          // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+  
+          try {
+            let app = firebase.app();
+            let features = [
+              'auth', 
+              'database', 
+              'firestore',
+              'functions',
+              'messaging', 
+              'storage', 
+              'analytics', 
+              'remoteConfig',
+              'performance',
+            ].filter(feature => typeof app[feature] === 'function');
+          } catch (e) {
+            console.error(e);
+          }
+
+          const firebaseUI = new firebaseui.auth.AuthUI(firebase.auth());
+          const firebaseUiConfig = {
+            callbacks: {
+              signInSuccessWithAuthResult: function (authResult, redirectUrl) {
+                // User successfully signed in.
+                // Return type determines whether we continue the redirect automatically
+                // or whether we leave that to developer to handle.
+                return true;
+              },
+              uiShown: () => {
+                //document.getElementById('loader').style.display = 'none';
+              },
+            },
+            signInFlow: 'popup',
+            signInSuccessUrl: 'main.html',
+            signInOptions: [
+              firebase.auth.EmailAuthProvider.PROVIDER_ID,
+            ],
+            credentialHelper: firebaseui.auth.CredentialHelper.NONE,
+            // Your terms of service url.
+            tosUrl: 'https://example.com/terms',
+            // Your privacy policy url.
+            privacyPolicyUrl: 'https://example.com/privacy',
+          };
+          firebaseUI.start('#firebaseui-auth-container', firebaseUiConfig);
         });
-        // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
-        // firebase.firestore().doc('/foo/bar').get().then(() => { });
-        // firebase.functions().httpsCallable('yourFunction')().then(() => { });
-        // firebase.messaging().requestPermission().then(() => { });
-        // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
-        // firebase.analytics(); // call to activate
-        // firebase.analytics().logEvent('tutorial_completed');
-        // firebase.performance(); // call to activate
-        //
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+      </script>
 
-        try {
-          let app = firebase.app();
-          let features = [
-            'auth', 
-            'database', 
-            'firestore',
-            'functions',
-            'messaging', 
-            'storage', 
-            'analytics', 
-            'remoteConfig',
-            'performance',
-          ].filter(feature => typeof app[feature] === 'function');
-        } catch (e) {
-          console.error(e);
-          loadEl.textContent = 'Error loading the Firebase SDK, check the console.';
-        }
+      <div class="modal fade" id="addDepositModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Add New Recurring Deposit</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                  <label for="exampleFormControlInput1" class="form-label">Payment Method</label>
+                  <select id="selectPaymentMethod" class="form-control">
+                    <option value="#">Not available</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="exampleFormControlInput1" class="form-label">Amount (USD)</label>
+                  <input id="txtAmountDeposit" type="number" class="form-control" placeholder="0.00" value="10.00"/>
+                </div>
+                <div class="mb-3">
+                  <label for="exampleFormControlInput1" class="form-label">Recurring every <input id="txtRecurDeposit" type="number" class="form-control" value="7" placeholder="0" style="width:70px;display:inline"/> day(s)</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="addRecurDeposit()">Save</button>
+            </div>
+            </div>
+        </div>
+      </div>
 
-        const firebaseUI = new firebaseui.auth.AuthUI(firebase.auth());
-        const firebaseUiConfig = {
-          callbacks: {
-            signInSuccessWithAuthResult: function (authResult, redirectUrl) {
-              // User successfully signed in.
-              // Return type determines whether we continue the redirect automatically
-              // or whether we leave that to developer to handle.
-              return true;
-            },
-            uiShown: () => {
-              //document.getElementById('loader').style.display = 'none';
-            },
-          },
-          signInFlow: 'popup',
-          signInSuccessUrl: 'home.html',
-          signInOptions: [
-            firebase.auth.EmailAuthProvider.PROVIDER_ID,
-          ],
-          credentialHelper: firebaseui.auth.CredentialHelper.NONE,
-          // Your terms of service url.
-          tosUrl: 'https://example.com/terms',
-          // Your privacy policy url.
-          privacyPolicyUrl: 'https://example.com/privacy',
-        };
-        firebaseUI.start('#firebaseui-auth-container', firebaseUiConfig);
-      });
-    </script>
+      <div class="modal fade" id="addPurchaseModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+          <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Add New Recurring Purchase</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Asset</label>
+                <select id="selectAsset" class="form-control">
+                    <option value="BTC-USD">Bitcoin (BTC/USD)</option>
+                    <option value="ETH-USD">Ethereum (ETH/USD)</option>
+                    <option value="ADA-USD">Cardano (ADA/USD)</option>
+                    <option value="SOL-USD">Solana (SOL/USD)</option>
+                    <option value="DOT-USD">Polkadot (DOT/USD)</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Amount $</label>
+                <input id="txtAmount" type="number" class="form-control" placeholder="0.00" value="10.00"/>
+              </div>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Recurring every <input id="txtRecur" type="number" class="form-control" value="7" placeholder="0" style="width:70px;display:inline"/> day(s)</label>
+              </div>
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary" onclick="addRecurOrder()">Save</button>
+          </div>
+          </div>
+      </div>
+      </div>
+
+      <div class="modal fade" id="viewPurchaseModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+          <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Recurring Purchase</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+              <div id="alertFundsWarning" class="alert alert-danger" role="alert" style="display:none">
+              </div>
+              <input type="hidden" id="viewJobId" value=""/>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Asset</label>
+                <div id="spanViewAsset" class="bold"></div>
+              </div>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Amount (USD)</label>
+                <div id="spanViewAmount" class="bold"></div>
+              </div>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Recurring every <span id="spanViewRecur" class="bold"></span> day(s)</label>
+              </div>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Created</label>
+                <div id="spanViewCreated" class="bold"></div>
+              </div>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Next Purchase</label>
+                <div id="spanViewNext" class="bold"></div>
+              </div>
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-danger" onclick="deleteRecurOrder()">Delete</button>
+          </div>
+          </div>
+      </div>
+      </div>
+
+      <div class="modal fade" id="viewDepositModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+          <div class="modal-content">
+          <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Recurring Deposit</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+              <div id="alertDepositWarning" class="alert alert-danger" role="alert" style="display:none">
+              </div>
+              <input type="hidden" id="viewDepositJobId" value=""/>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Payment Method</label>
+                <div id="spanViewPaymentMethod" class="bold"></div>
+              </div>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Amount (USD)</label>
+                <div id="spanViewDepositAmount" class="bold"></div>
+              </div>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Recurring every <span id="spanViewDepositRecur" class="bold"></span> day(s)</label>
+              </div>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Created</label>
+                <div id="spanViewDepositCreated" class="bold"></div>
+              </div>
+              <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">Next Deposit</label>
+                <div id="spanViewDepositNext" class="bold"></div>
+              </div>
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-danger" onclick="deleteRecurDeposit()">Delete</button>
+          </div>
+          </div>
+      </div>
+      </div>
+
   </body>
 </html>
