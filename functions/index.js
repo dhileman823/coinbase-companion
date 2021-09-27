@@ -146,7 +146,7 @@ async function processUserJobs(userDoc){
         functions.logger.log("processJobs => got job", job);
         user.jobs.push(job);
     });
-    let safeCollection = db.collection("users/"+uid+"/safe")
+    let safeCollection = db.collection("users/"+user.id+"/safe")
     let safeDoc = await safeCollection.doc(user.key).get();
     let safe = safeDoc.data();
     if(userHasValidKey(safe)){
