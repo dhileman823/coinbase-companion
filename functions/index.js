@@ -146,16 +146,23 @@ async function processUserJobs(userDoc){
         functions.logger.log("processJobs => got job", job);
         user.jobs.push(job);
     });
-    let safeCollection = db.collection("users/"+user.id+"/safe")
-    let safeDoc = await safeCollection.doc(user.key).get();
-    let safe = safeDoc.data();
-    if(userHasValidKey(safe)){
-        functions.logger.log("User has valid key; continue processing user orders");
-        user.safe = safe;
-        processUserOrders(user);
+    functions.logger.log("processUserJobs => user.id " + user.id);
+    functions.logger.log("processUserJobs => user.key " + user.key);
+    if(user.key && user.key.length > 0){
+        let safeCollection = db.collection("users/"+user.id+"/safe")
+        let safeDoc = await safeCollection.doc(user.key).get();
+        let safe = safeDoc.data();
+        if(userHasValidKey(safe)){
+            functions.logger.log("User has valid key; continue processing user orders");
+            user.safe = safe;
+            processUserOrders(user);
+        }
+        else{
+            functions.logger.log("User does not have valid key.");
+        }
     }
     else{
-        functions.logger.log("User does not have valid key.");
+        functions.logger.log("User does not have a key.");
     }
 }
 
@@ -176,9 +183,14 @@ function processUserOrders(user){
                     //submit the order
 
                     //enter a transaction record
-                    let txCollection = db.collection("users/"+uid+"/transactions");
+                    functions.logger.log("Process job - adding transaction history");
+                    let txCollection = db.collection("users/"+user.id+"/transactions");
                     let tx = {"type":job.type, "asset":job.asset, "amount":job.amount, "created": now};
                     txCollection.add(tx);
+
+                    //update the next purchase date
+                    let newNextPurchaseDate = getNewNextPurchaseDate(job);
+                    functions.logger.log("Process job - NEW nextDate: " + newNextPurchaseDate.toUTCString());
                 }
             }
         }
@@ -186,6 +198,14 @@ function processUserOrders(user){
             functions.logger.log('Cannot process jobs for user ' + user.email + ": missing api-key.");
         }
     }
+}
+
+function getNewNextPurchaseDate(job){
+    var date = job.nextPurchaseDate.toDate();
+    var days = job.recurDays;
+    var result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
 }
 
 function getCoinbasePlaceOrderSignature(user, job, timestamp){
