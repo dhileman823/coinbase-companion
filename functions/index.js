@@ -143,6 +143,7 @@ async function processUserJobs(userDoc){
     let jobDocs = await userDoc.ref.collection("jobs").get();
     jobDocs.forEach(jobDoc => {
         let job = jobDoc.data();
+        job.id = jobDoc.id;
         functions.logger.log("processJobs => got job", job);
         user.jobs.push(job);
     });
@@ -181,6 +182,14 @@ function processUserOrders(user){
                 functions.logger.log("timeForPurchase? " + timeForPurchase);
                 if(timeForPurchase){
                     //submit the order
+                    if(job.type == "deposit"){
+                        //do deposit
+                        functions.logger.log("Process job - do coinbase deposit");
+                    }
+                    else{
+                        //do order
+                        functions.logger.log("Process job - do coinbase order");
+                    }
 
                     //enter a transaction record
                     functions.logger.log("Process job - adding transaction history");
@@ -191,6 +200,8 @@ function processUserOrders(user){
                     //update the next purchase date
                     let newNextPurchaseDate = getNewNextPurchaseDate(job);
                     functions.logger.log("Process job - NEW nextDate: " + newNextPurchaseDate.toUTCString());
+                    let jobCollection = db.collection("users/"+user.id+"/jobs");
+                    jobCollection.doc(job.id).update({"nextPurchaseDate": newNextPurchaseDate});
                 }
             }
         }
