@@ -3,6 +3,7 @@ const functions = require("firebase-functions");
 var admin = require('firebase-admin');
 admin.initializeApp();
 var db = admin.firestore();
+var coinbase = require('./coinbase');
 
 exports.getBalance = functions.https.onCall((data, context) => {
     const uid = context.auth.uid;
@@ -15,7 +16,8 @@ exports.getBalance = functions.https.onCall((data, context) => {
             var safe = safeDoc.data();
             if(userHasValidKey(safe)){
                 functions.logger.log("getBalance => user has valid key");
-                return coinbaseBalanceRequest(safe);
+                coinbase.api.keys = safe;
+                return coinbase.api.getAccounts();
             }
             else{
                 return {"data":"{\"message\":\"User does not have a valid key\"}"};
@@ -35,7 +37,8 @@ exports.getPaymentMethods = functions.https.onCall((data, context) => {
             var safe = safeDoc.data();
             if(userHasValidKey(safe)){
                 functions.logger.log("getPaymentMethods => user has valid key");
-                return coinbasePaymentMethodsRequest(safe);
+                coinbase.api.keys = safe;
+                return coinbase.api.getPaymentMethods();
             }
             else{
                 return {"data":"{\"message\":\"User does not have a valid key\"}"};
@@ -43,82 +46,6 @@ exports.getPaymentMethods = functions.https.onCall((data, context) => {
         });
     });
 });
-
-function userHasValidKey(safe){
-    if(safe && safe.key && safe.key.length>0 && safe.secret && safe.secret.length>0 && safe.passphrase && safe.passphrase.length>0){
-        return true;
-    }
-    return false;
-}
-
-function coinbaseBalanceRequest(safe){
-    functions.logger.log("getBalance => begin coinbaseBalanceRequest");
-    const coinbaseApiUrl = "https://api.pro.coinbase.com";
-    const accountsUrl = coinbaseApiUrl + "/accounts";
-
-    var timestamp = Date.now() / 1000;
-    var signature = getRequestSignature(safe, "/accounts", timestamp);
-    var requestOptions = {
-        "url": accountsUrl,
-        "headers": {
-            "CB-ACCESS-KEY": safe.key,
-            "CB-ACCESS-SIGN": signature,
-            "CB-ACCESS-TIMESTAMP": timestamp,
-            "CB-ACCESS-PASSPHRASE": safe.passphrase,
-            "User-Agent": "Firebase-function"
-        }
-    };
-    return new Promise(function(resolve, reject){
-        functions.logger.log("getBalance => begin request to coinbase: " + accountsUrl);
-        request(requestOptions, function(error, response, body) {
-            functions.logger.log("getBalance => coinbase request finished", body);
-            resolve(body);
-        });
-    });
-}
-
-function coinbasePaymentMethodsRequest(safe){
-    functions.logger.log("getPaymentMethods => begin coinbasePaymentMethodsRequest");
-    const coinbaseApiUrl = "https://api.pro.coinbase.com";
-    const pmUrl = coinbaseApiUrl + "/payment-methods";
-
-    var timestamp = Date.now() / 1000;
-    var signature = getRequestSignature(safe, "/payment-methods", timestamp);
-    var requestOptions = {
-        "url": pmUrl,
-        "headers": {
-            "CB-ACCESS-KEY": safe.key,
-            "CB-ACCESS-SIGN": signature,
-            "CB-ACCESS-TIMESTAMP": timestamp,
-            "CB-ACCESS-PASSPHRASE": safe.passphrase,
-            "User-Agent": "Firebase-function"
-        }
-    };
-    return new Promise(function(resolve, reject){
-        functions.logger.log("getPaymentMethods => begin request to coinbase: " + pmUrl);
-        request(requestOptions, function(error, response, body) {
-            functions.logger.log("getPaymentMethods => coinbase request finished", body);
-            resolve(body);
-        });
-    });
-}
-
-function getRequestSignature(safe, path, timestamp){
-    var crypto = require('crypto');
-    var secret = safe.secret;
-    var requestPath = path;
-    var body = ""; //no body for this GET request
-    var method = 'GET';
-    // create the prehash string by concatenating required parts
-    var what = timestamp + method + requestPath + body;
-    // decode the base64 secret
-    var key = Buffer(secret, 'base64');
-    // create a sha256 hmac with the secret
-    var hmac = crypto.createHmac('sha256', key);
-    // sign the require message with the hmac
-    // and finally base64 encode the result
-    return hmac.update(what).digest('base64');
-}
 
 exports.processJobs = functions.pubsub.schedule('every day 12:01').timeZone('Etc/UTC').onRun(async context => {
     functions.logger.log("processJobs => begin");
@@ -135,6 +62,13 @@ exports.processJobs = functions.pubsub.schedule('every day 12:01').timeZone('Etc
     });
     return Promise.all(promises);
 });
+
+function userHasValidKey(safe){
+    if(safe && safe.key && safe.key.length>0 && safe.secret && safe.secret.length>0 && safe.passphrase && safe.passphrase.length>0){
+        return true;
+    }
+    return false;
+}
 
 async function processUserJobs(userDoc){
     let user = userDoc.data();
@@ -217,21 +151,4 @@ function getNewNextPurchaseDate(job){
     var result = new Date(date);
     result.setDate(result.getDate() + days);
     return result;
-}
-
-function getCoinbasePlaceOrderSignature(user, job, timestamp){
-    var crypto = require('crypto');
-    var secret = user.secret;
-    var requestPath = '/accounts';
-    var body = ""; //no body for this GET request
-    var method = 'GET';
-    // create the prehash string by concatenating required parts
-    var what = timestamp + method + requestPath + body;
-    // decode the base64 secret
-    var key = Buffer(secret, 'base64');
-    // create a sha256 hmac with the secret
-    var hmac = crypto.createHmac('sha256', key);
-    // sign the require message with the hmac
-    // and finally base64 encode the result
-    return hmac.update(what).digest('base64');
 }
