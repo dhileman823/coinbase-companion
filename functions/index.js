@@ -119,23 +119,23 @@ function processUserOrders(user){
                     if(job.type == "deposit"){
                         //do deposit
                         functions.logger.log("Process job - do coinbase deposit");
+
+                        //enter a transaction record
+                        addHistory(user, job);
+                        //update the next purchase date
+                        updateNextPurchaseDate(job);
                     }
                     else{
                         //do order
                         functions.logger.log("Process job - do coinbase order");
+                        
+                        //enter a transaction record
+                        addHistory(user, job);
+                        //update the next purchase date
+                        updateNextPurchaseDate(job);
                     }
 
-                    //enter a transaction record
-                    functions.logger.log("Process job - adding transaction history");
-                    let txCollection = db.collection("users/"+user.id+"/transactions");
-                    let tx = {"type":job.type, "asset":job.asset, "amount":job.amount, "created": now};
-                    txCollection.add(tx);
-
-                    //update the next purchase date
-                    let newNextPurchaseDate = getNewNextPurchaseDate(job);
-                    functions.logger.log("Process job - NEW nextDate: " + newNextPurchaseDate.toUTCString());
-                    let jobCollection = db.collection("users/"+user.id+"/jobs");
-                    jobCollection.doc(job.id).update({"nextPurchaseDate": newNextPurchaseDate});
+                    
                 }
             }
         }
@@ -143,6 +143,20 @@ function processUserOrders(user){
             functions.logger.log('Cannot process jobs for user ' + user.email + ": missing api-key.");
         }
     }
+}
+
+function addHistory(job, now){
+    functions.logger.log("Process job - adding transaction history");
+    let txCollection = db.collection("users/"+user.id+"/transactions");
+    let tx = {"type":job.type, "asset":job.asset, "amount":job.amount, "created": now};
+    txCollection.add(tx);
+}
+
+function updateNextPurchaseDate(user, job){
+    let newNextPurchaseDate = getNewNextPurchaseDate(job);
+    functions.logger.log("Process job - NEW nextDate: " + newNextPurchaseDate.toUTCString());
+    let jobCollection = db.collection("users/"+user.id+"/jobs");
+    jobCollection.doc(job.id).update({"nextPurchaseDate": newNextPurchaseDate});
 }
 
 function getNewNextPurchaseDate(job){
