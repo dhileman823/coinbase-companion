@@ -87,6 +87,9 @@ var SettingsWidgetFactory = {
                     </div>
                 </div>
 
+                <br/>
+                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#testDepositModal">Add test deposit</button>
+
                 <div class="modal fade" id="addKeyModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content">

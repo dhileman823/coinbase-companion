@@ -169,6 +169,29 @@ async function getPaymentMethod(){
     return null;
 }
 
+async function doDeposit(){
+    var amount = document.getElementById("txtTestAmountDeposit").value;
+    var paymentMethodId = document.getElementById("txtTestPaymentMethodId").value;
+    if(_state.firebaseUser && _state.user && _state.user.key.length > 0){
+        var requestDoDeposit = firebase.functions().httpsCallable("doDeposit");
+        try{
+            var response = await requestDoDeposit({"amount":amount, "paymentMethodId":paymentMethodId});
+            console.log(response);
+            if(response && response.data){
+                var data = JSON.parse(response.data);
+                if(data.message){
+                    console.error(data.message);
+                }
+            }
+        }
+        catch(e){
+            console.error(e);
+        }
+        //return methods;
+    }
+    return null;
+}
+
 function logout(){
     firebase.auth().signOut().then(function(){
         window.location.href = "/";

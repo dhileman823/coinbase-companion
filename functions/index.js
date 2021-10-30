@@ -47,6 +47,28 @@ exports.getPaymentMethods = functions.https.onCall((data, context) => {
     });
 });
 
+exports.doDeposit = functions.https.onCall((data, context) => {
+    functions.logger.log("doDeposit => data " + data);
+    const uid = context.auth.uid;
+    let userCollection = db.collection("users");
+    return userCollection.doc(uid).get().then(userDoc => {
+        var user = userDoc.data();
+        functions.logger.log("doDeposit => got user");
+        let safeCollection = db.collection("users/"+uid+"/safe")
+        return safeCollection.doc(user.key).get().then(safeDoc => {
+            var safe = safeDoc.data();
+            if(userHasValidKey(safe)){
+                functions.logger.log("doDeposit => user has valid key");
+                coinbase.api.keys = safe;
+                return coinbase.api.deposit(data.amount, data.paymentMethodId);
+            }
+            else{
+                return {"data":"{\"message\":\"User does not have a valid key\"}"};
+            }
+        });
+    });
+});
+
 exports.processJobs = functions.pubsub.schedule('every day 12:01').timeZone('Etc/UTC').onRun(async context => {
     functions.logger.log("processJobs => begin");
     let userCollection = db.collection("users");
@@ -128,7 +150,7 @@ function processUserOrders(user){
                     else{
                         //do order
                         functions.logger.log("Process job - do coinbase order");
-                        
+
                         //enter a transaction record
                         addHistory(user, job);
                         //update the next purchase date
