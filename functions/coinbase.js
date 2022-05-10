@@ -3,10 +3,10 @@ const functions = require("firebase-functions");
 
 var api = {
     "keys": {},
-    "baseUrl": "https://api.pro.coinbase.com",
+    "baseUrl": "https://api.exchange.coinbase.com",
     "accountsUrl": "/accounts",
     "paymentMethodsUrl": "/payment-methods",
-    "depositUrl": "/deposits/payment-methods",
+    "depositUrl": "/deposits/payment-method",
     "orderUrl": "/orders",
 
     "getRequestSignature": function(path, timestamp, body, method){
@@ -98,8 +98,30 @@ var api = {
         });
     },
 
-    "order": function(asset, amount){
-
+    "order": function(product, amount){
+        functions.logger.log("api.order => begin: " + product + ", " + amount);
+        var timestamp = Date.now() / 1000;
+        var body = {"funds": amount, "product_id": product, "side": "buy", "type": "market"};
+        var signature = this.getRequestSignature(this.orderUrl, timestamp, JSON.stringify(body), "POST");
+        var requestOptions = {
+            "url": this.baseUrl + this.orderUrl,
+            "body": JSON.stringify(body),
+            "headers": {
+                "CB-ACCESS-KEY": this.keys.key,
+                "CB-ACCESS-SIGN": signature,
+                "CB-ACCESS-TIMESTAMP": timestamp,
+                "CB-ACCESS-PASSPHRASE": this.keys.passphrase,
+                "User-Agent": "Firebase-function",
+                "Content-Type": "application/json"
+            }
+        };
+        return new Promise(function(resolve, reject){
+            functions.logger.log("api.order => begin request to coinbase");
+            request.post(requestOptions, function(error, response, rbody) {
+                functions.logger.log("api.order => coinbase request finished", rbody);
+                resolve(rbody);
+            });
+        });
     }
 };
 

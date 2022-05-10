@@ -169,7 +169,7 @@ async function getPaymentMethod(){
     return null;
 }
 
-async function doDeposit(){
+async function doTestDeposit(){
     var amount = document.getElementById("txtTestAmountDeposit").value;
     var paymentMethodId = document.getElementById("txtTestPaymentMethodId").value;
     if(_state.firebaseUser && _state.user && _state.user.key.length > 0){
@@ -190,6 +190,26 @@ async function doDeposit(){
         //return methods;
     }
     return null;
+}
+
+async function doTestOrder(){
+    var amount = document.getElementById("txtTestAmountOrder").value;
+    if(_state.firebaseUser && _state.user && _state.user.key.length > 0){
+        var requestDoOrder = firebase.functions().httpsCallable("doOrder");
+        try{
+            var response = await requestDoOrder({"amount":amount, "product":"BTC-USD"});
+            console.log(response);
+            if(response && response.data){
+                var data = JSON.parse(response.data);
+                if(data.message){
+                    console.error(data.message);
+                }
+            }
+        }
+        catch(e){
+            console.error(e);
+        }
+    }
 }
 
 function logout(){

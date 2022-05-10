@@ -368,7 +368,28 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" onclick="doDeposit()">Deposit Now</button>
+                <button type="button" class="btn btn-success" onclick="doTestDeposit()">Deposit Now</button>
+            </div>
+            </div>
+        </div>
+      </div>
+
+      <div class="modal fade" id="testOrderModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">BTC Test Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                  <label for="exampleFormControlInput1" class="form-label">Amount (USD)</label>
+                  <input id="txtTestAmountOrder" type="number" class="form-control" placeholder="0.00" value="10.00"/>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="doTestOrder()">Submit Market Order Now</button>
             </div>
             </div>
         </div>

@@ -69,6 +69,28 @@ exports.doDeposit = functions.https.onCall((data, context) => {
     });
 });
 
+exports.doOrder = functions.https.onCall((data, context) => {
+    functions.logger.log("doOrder => data " + data);
+    const uid = context.auth.uid;
+    let userCollection = db.collection("users");
+    return userCollection.doc(uid).get().then(userDoc => {
+        var user = userDoc.data();
+        functions.logger.log("doOrder => got user");
+        let safeCollection = db.collection("users/"+uid+"/safe")
+        return safeCollection.doc(user.key).get().then(safeDoc => {
+            var safe = safeDoc.data();
+            if(userHasValidKey(safe)){
+                functions.logger.log("doOrder => user has valid key");
+                coinbase.api.keys = safe;
+                return coinbase.api.order(data.product, data.amount);
+            }
+            else{
+                return {"data":"{\"message\":\"User does not have a valid key\"}"};
+            }
+        });
+    });
+});
+
 exports.processJobs = functions.pubsub.schedule('every day 12:01').timeZone('Etc/UTC').onRun(async context => {
     functions.logger.log("processJobs => begin");
     let userCollection = db.collection("users");
@@ -143,18 +165,18 @@ function processUserOrders(user){
                         functions.logger.log("Process job - do coinbase deposit");
 
                         //enter a transaction record
-                        addHistory(user, job);
+                        addHistory(user, job, now);
                         //update the next purchase date
-                        updateNextPurchaseDate(job);
+                        updateNextPurchaseDate(user, job);
                     }
                     else{
                         //do order
                         functions.logger.log("Process job - do coinbase order");
 
                         //enter a transaction record
-                        addHistory(user, job);
+                        addHistory(user, job, now);
                         //update the next purchase date
-                        updateNextPurchaseDate(job);
+                        updateNextPurchaseDate(user, job);
                     }
 
                     
@@ -167,7 +189,7 @@ function processUserOrders(user){
     }
 }
 
-function addHistory(job, now){
+function addHistory(user, job, now){
     functions.logger.log("Process job - adding transaction history");
     let txCollection = db.collection("users/"+user.id+"/transactions");
     let tx = {"type":job.type, "asset":job.asset, "amount":job.amount, "created": now};
