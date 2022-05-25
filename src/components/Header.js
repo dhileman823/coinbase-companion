@@ -4,56 +4,8 @@ import { signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged } from
 import { auth, provider } from "../firestore";
 import { useEffect, useState } from "react";
 
-function Header() {
-    const [userName, setUserName] = useState(null);
-
-    useEffect(() => {
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                console.log(user.email);
-                setUserName(user.displayName);
-            }
-        });
-    });
-
-    const googleHandler = async () => {
-        provider.setCustomParameters({ prompt: "select_account" });
-        signInWithPopup(auth, provider)
-            .then((result) => {
-                // This gives you a Google Access Token. You can use it to access the Google API.
-                const credential = GoogleAuthProvider.credentialFromResult(result);
-                const token = credential.accessToken;
-                // The signed-in user info.
-                const user = result.user;
-                // redux action? --> dispatch({ type: SET_USER, user });
-                console.log(user);
-                setUserName(user.displayName);
-            })
-            .catch((error) => {
-                // Handle Errors here.
-                const errorCode = error.code;
-                const errorMessage = error.message;
-                // The email of the user's account used.
-                const email = error.email;
-                // The AuthCredential type that was used.
-                const credential = GoogleAuthProvider.credentialFromError(error);
-                console.log(errorMessage);
-            });
-    };
-
-    const logoutHandler = async () => {
-        signOut(auth)
-            .then(() => {
-                console.log('logged out');
-                setUserName(null);
-                //navigate('/');
-            })
-            .catch((error) => {
-                console.log(error);
-            });
-    };
-
-    if (userName) {
+function Header(props) {
+    if (props.displayName) {
         return (
             <Navbar bg="primary" variant="dark" expand="lg">
                 <Container>
@@ -66,8 +18,8 @@ function Header() {
                             <Nav.Link as={Link} to="settings">Settings</Nav.Link>
                         </Nav>
                         <Nav>
-                            <NavDropdown title={userName} id="basic-nav-dropdown">
-                                <NavDropdown.Item onClick={logoutHandler}>
+                            <NavDropdown title={props.displayName} id="basic-nav-dropdown">
+                                <NavDropdown.Item onClick={props.logoutHandler}>
                                     Sign Out
                                 </NavDropdown.Item>
                             </NavDropdown>
@@ -81,7 +33,7 @@ function Header() {
         <Navbar bg="primary" variant="dark" expand="lg">
             <Container>
                 <Navbar.Brand as={Link} to="/">Coinbase Companion</Navbar.Brand>
-                <Button variant="dark" onClick={googleHandler}>Log In</Button>
+                <Button variant="dark" onClick={props.loginHandler}>Log In</Button>
             </Container>
         </Navbar>
     );
