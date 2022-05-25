@@ -1,9 +1,10 @@
-import { Navbar, Container, Nav, NavDropdown } from "react-bootstrap";
+import { Navbar, Container, Nav } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import Login from "./Login";
 
 function Header(){
     return (
-        <Navbar bg="dark" variant="dark" expand="lg">
+        <Navbar bg="primary" variant="dark" expand="lg">
         <Container>
             <Navbar.Brand as={Link} to="/">Coinbase Companion</Navbar.Brand>
             <Navbar.Toggle aria-controls="basic-navbar-nav" />
@@ -12,9 +13,9 @@ function Header(){
                 <Nav.Link as={Link} to="/">Markets</Nav.Link>
                 <Nav.Link as={Link} to="orders">Orders</Nav.Link>
                 <Nav.Link as={Link} to="settings">Settings</Nav.Link>
-                <NavDropdown title="User Name" id="basic-nav-dropdown">
-                    <NavDropdown.Item href="#action/3.1">Logout</NavDropdown.Item>
-                </NavDropdown>
+            </Nav>
+            <Nav>
+                <Login />
             </Nav>
             </Navbar.Collapse>
         </Container>

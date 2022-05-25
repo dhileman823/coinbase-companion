@@ -1,8 +1,26 @@
-import { signInWithPopup, GoogleAuthProvider } from '@firebase/auth';
+import { signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged } from '@firebase/auth';
 import { auth, provider } from "../firestore";
-import { Button } from "react-bootstrap";
+import { Button, NavDropdown } from "react-bootstrap";
+import { useEffect, useState } from "react";
 
 function Login() {
+  const [userName, setUserName] = useState(null);
+
+  useEffect(() => {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // User is signed in, see docs for a list of available properties
+        // https://firebase.google.com/docs/reference/js/firebase.User
+        const uid = user.uid;
+        console.log(user.email);
+        setUserName(user.displayName);
+      }
+      else {
+        console.log("authChange, no user");
+      }
+    });
+  });
+
   const googleHandler = async () => {
     provider.setCustomParameters({ prompt: "select_account" });
     signInWithPopup(auth, provider)
@@ -14,6 +32,7 @@ function Login() {
         const user = result.user;
         // redux action? --> dispatch({ type: SET_USER, user });
         console.log(user);
+        setUserName(user.displayName);
       })
       .catch((error) => {
         // Handle Errors here.
@@ -28,9 +47,31 @@ function Login() {
       });
   };
 
+  const logoutHandler = async () => {
+    signOut(auth)
+    .then(() => {
+        console.log('logged out');
+        setUserName(null);
+        //navigate('/');
+    })
+    .catch((error) => {
+        console.log(error);
+    });
+  };
+
+  if(userName){
+    return (
+      <NavDropdown title={userName} id="basic-nav-dropdown">
+        <NavDropdown.Item href="#action/3.1">
+          <Button variant="link" onClick={logoutHandler}>Log-out</Button>
+        </NavDropdown.Item>
+      </NavDropdown>
+    );
+  }
+
   return (
     <div className="login-wrapper">
-      <Button onClick={googleHandler}>Log-in</Button>
+      <Button variant="dark" onClick={googleHandler}>Log-in</Button>
     </div>
   );
 }
