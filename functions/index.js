@@ -163,6 +163,8 @@ function processUserOrders(user){
                     if(job.type == "deposit"){
                         //do deposit
                         functions.logger.log("Process job - do coinbase deposit");
+                        coinbase.api.keys = user.safe;
+                        coinbase.api.deposit(job.amount, job.paymentMethod);
 
                         //enter a transaction record
                         addHistory(user, job, now);
@@ -172,6 +174,8 @@ function processUserOrders(user){
                     else{
                         //do order
                         functions.logger.log("Process job - do coinbase order");
+                        coinbase.api.keys = user.safe;
+                        coinbase.api.order(user.asset, job.amount);
 
                         //enter a transaction record
                         addHistory(user, job, now);
