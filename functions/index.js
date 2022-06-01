@@ -175,7 +175,7 @@ function processUserOrders(user){
                         //do order
                         functions.logger.log("Process job - do coinbase order");
                         coinbase.api.keys = user.safe;
-                        coinbase.api.order(user.asset, job.amount);
+                        coinbase.api.order(job.asset, job.amount);
 
                         //enter a transaction record
                         addHistory(user, job, now);
